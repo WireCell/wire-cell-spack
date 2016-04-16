@@ -1,0 +1,6 @@
+[submodule "spack"]
+	path = spack
+	url = https://github.com/LLNL/spack.git
+[submodule "hep-spack"]
+	path = hep-spack
+	url = https://github.com/HEP-SF/hep-spack.git
