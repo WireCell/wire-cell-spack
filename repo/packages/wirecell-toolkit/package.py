@@ -8,6 +8,7 @@ class WirecellToolkit(Package):
 
     version('dev', git="https://github.com/WireCell/wire-cell-build.git")
 
+    depends_on("jsoncpp")
     depends_on("eigen")
     depends_on("tbb")
     depends_on("boost@1.59.0")

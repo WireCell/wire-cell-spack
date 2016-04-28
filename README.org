@@ -1,17 +1,186 @@
 #+TITLE: Build Wire Cell With Spack
 
-Set up the source
-#+BEGIN_SRC bash
+* Prerequisites
+
+This package uses Spack to build Wire Cell Toolkit or Prototype and its major dependencies.
+Some dependencies must be provided by your OS.  In particular:
+
+- A suitable C++11 compiler (see below)5.x.
+- X11 and other system libraries.
+
+** A note on the compiler
+
+As of the time of typing this sentence, ROOT6 can not be built with GCC 5.x and GCC 4.9 must be used. 
+If your OS does not provide GCC 4.9 you will need to arrange to have it installed.  On Ubuntu 16.04 you can install GCC 4.9 with:
+
+#+BEGIN_SRC sh
+  $ sudo apt install gcc-4.9 g++-4.9
+  $ spack compiler add /usr/bin/gcc-4.9.3
+#+END_SRC
+
+You must add to the Spack "spec" (package name list) the identifier for the non-default compiler.  Eg:
+
+#+BEGIN_EXAMPLE
+%gcc@4.9.3
+#+END_EXAMPLE
+
+A full example:
+
+#+BEGIN_SRC sh
+  $ spack install wirecell-toolkit%gcc@4.9.3
+#+END_SRC
+
+* Prepare the build environment
+
+Get this package's source and cause a copy of Spack to be retrieved:
+
+#+BEGIN_SRC sh
   $ git https://github.com/wirecell/wire-cell-spack.git
   $ cd wire-cell-spack
   $ git submodule init
   $ git submodule update
 #+END_SRC
 
-Set up Spack.
-#+BEGIN_SRC bash
+* Set up Spack.
+
+One time setup:
+
+#+BEGIN_SRC sh
   $ source spack/share/spack/setup-env.sh
-  $ spack repo add hep-spack/
-  $ spack repo add wc-spack
+  $ spack repo add repo
   $ spack list
 #+END_SRC
+
+You should find various Wire Cell packages, ROOT, etc listed.
+
+Anytime you revisit this project from a fresh shell session you will need to repeat the set up:
+
+#+BEGIN_SRC sh
+  $ source spack/share/spack/setup-env.sh
+#+END_SRC
+
+* Install
+
+One command is needed to install everything.  As discussed above, be sure to indicate a non-default compiler if needed on your OS.
+
+#+BEGIN_SRC sh
+  $ spack install <packagename> [%<compiler>@<version>]
+#+END_SRC
+
+What to install depends on what you want.  Possible options:
+
+- =wirecell-toolkit= :: install the toolkit
+- =wirecell-prototype= :: install the prototype code (note: not yet added - message me about it if you want it.)
+- =root= ::  just install ROOT6 
+
+Example:
+#+BEGIN_SRC sh
+  $ spack install wirecell-toolkit%gcc@4.9.3
+#+END_SRC
+
+* Running 
+
+Spack can also set environment variables needed to use the software.  
+It does this through the [[http://modules.sf.net/][Environment Modules]] system which needs to be installed and configured.  
+On Ubuntu and similar:
+
+#+BEGIN_SRC sh
+  $ sudo apt-get install environment-modules
+  $ source /usr/share/modules/init/bash 
+  $ source spack/share/spack/setup-env.sh
+#+END_SRC
+
+You can then activate the package you installed above:
+
+#+BEGIN_SRC sh
+  $ spack load wirecell-toolkit
+  $ wire-cell -h
+#+END_SRC
+
+
+* Using Spack for Wire Cell Development
+
+You can use this package to provide a development environment in a few ways.
+
+** In-situ
+
+To debug failed builds or if you want to do development right inside the source used by Spack you can.  It involves three steps. 
+
+1) tell Spack to stage the source or to keep it after the install stage terminates
+ #+BEGIN_SRC sh
+  $ spack stage wirecell-toolkit%gcc@4.9.3
+  # or
+  $ spack --keep-stage install wirecell-toolkit%gcc@4.9.3
+ #+END_SRC
+2) enter the build environment
+ #+BEGIN_SRC sh
+  $ spack env wirecell-toolkit%gcc@4.9.3 /bin/bash
+ #+END_SRC
+3) change to the build directory
+ #+BEGIN_SRC sh
+  $ cd $(spack location -s wirecell-toolkit%gcc@4.9.3)/wire-cell-build/
+ #+END_SRC
+
+Some things to know if working in the build environment.
+
+- A log is made by the =wcb= build tool and is found in =build/config.log=
+- It has a line at the top =using wcb....= which shows the =configure= command.  Since Spack has long paths, it's useful to copy-paste this line if the =./wcb configure= command needs repeating.
+- The build environment is still "owned" by Spack.  In particular a =spack uninstall= can wipe it out
+- Spack gets the source via the anonymous GitHub URL.  If you need to push commits you may wish to do:
+
+#+BEGIN_SRC sh
+  $ git commit ...
+  $ ./switch-git-urls dev
+  $ git push
+  $ ./switch-git-urls  # ... switch back, if desired
+#+END_SRC
+
+- When done hacking, you can go back to normal build environment and rebuild, possibly after doing a clean, to confirm your fixes are good.
+
+#+BEGIN_SRC sh
+  $ exit  # <-- exit build environment
+  $ spack clean wirecell-toolkit%gcc@4.9.3
+  $ spack install wirecell-toolkit%gcc@4.9.3
+#+END_SRC
+
+- To start over 
+
+#+BEGIN_SRC sh
+  $ exit  # <-- exit build environment
+  $ spack uninstall [-a] wirecell-toolkit%gcc@4.9.3
+  $ spack install wirecell-toolkit%gcc@4.9.3
+#+END_SRC
+
+
+** Using Spack Views
+
+If you have the =spack view= command you can use it to make a simple file system view of all the packages providing Wire Cell dependencies.  This greatly simplifies developing Wire Cell outside of Spack.
+
+#+BEGIN_SRC sh
+  $ spack view `pwd`/view wirecell-toolkit%gcc@4.9.3
+  $ ls view/
+#+END_SRC 
+
+A minimum of environment variables are then needed.  Likely candidates are:
+
+#+BEGIN_SRC sh
+export PATH=`pwd`/view/bin:$PATH
+export LD_LIBRARY_PATH=`pwd`/view/lib:$PATH
+#+END_SRC
+
+
+* Development of this package
+
+Some notes on developing the =wire-cell-spack= package itself.
+
+** Add new version
+
+#+BEGIN_SRC sh
+$ spack checksum --keep-stage root 6.07.06
+...
+      version('6.07.06', '1180254be7ece0f16142b14381b22d68')
+#+END_SRC
+
+This line can be pasted into the =root/package.py= file.
+
+
