@@ -2,3 +2,5 @@
 spack-mirror*
 *.pyc
 *.log
+README.html
+*.moved

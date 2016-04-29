@@ -1,4 +1,5 @@
 [submodule "spack"]
 	path = spack
 	url = git@github.com:brettviren/spack.git
+	branch = wire-cell-toolkit
 

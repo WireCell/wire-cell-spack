@@ -5,30 +5,14 @@
 This package uses Spack to build Wire Cell Toolkit or Prototype and its major dependencies.
 Some dependencies must be provided by your OS.  In particular:
 
-- A suitable C++11 compiler (see below)5.x.
+- A suitable C++11 compiler 
 - X11 and other system libraries.
+- Ability to download source packages
 
-** A note on the compiler
+Notes:
 
-As of the time of typing this sentence, ROOT6 can not be built with GCC 5.x and GCC 4.9 must be used. 
-If your OS does not provide GCC 4.9 you will need to arrange to have it installed.  On Ubuntu 16.04 you can install GCC 4.9 with:
-
-#+BEGIN_SRC sh
-  $ sudo apt install gcc-4.9 g++-4.9
-  $ spack compiler add /usr/bin/gcc-4.9.3
-#+END_SRC
-
-You must add to the Spack "spec" (package name list) the identifier for the non-default compiler.  Eg:
-
-#+BEGIN_EXAMPLE
-%gcc@4.9.3
-#+END_EXAMPLE
-
-A full example:
-
-#+BEGIN_SRC sh
-  $ spack install wirecell-toolkit%gcc@4.9.3
-#+END_SRC
+ - See Section [[A note on the compiler]] below for dealing with the compiler if GCC 5.x is your default.
+ - Spack uses =curl= to download.  If you live behind a proxy set you environment appropriately.
 
 * Prepare the build environment
 
@@ -59,6 +43,26 @@ Anytime you revisit this project from a fresh shell session you will need to rep
   $ source spack/share/spack/setup-env.sh
 #+END_SRC
 
+** A note on the compiler
+
+As of the time of typing this sentence, ROOT6 can not be built with GCC 5.x which is default on recent Linux distributions.
+However, C++11/14 is needed.  
+This pretty much means GCC 4.9 will need to be made available.  
+On Ubuntu 16.04, for example you can do:
+
+#+BEGIN_SRC sh
+  $ sudo apt install gcc-4.9 g++-4.9
+#+END_SRC
+
+After sourcing the =setup-env.sh= file as above, introduce Spack to this compiler:
+
+#+BEGIN_SRC sh
+  $ spack compiler add /usr/bin/gcc-4.9.3
+#+END_SRC
+
+You will the need to tell Spack to use this compiler by appending a =%gcc@4.9.3= identifier to the Spack "spec" (package name list).
+This option is included in the subsequent examples.
+
 * Install
 
 One command is needed to install everything.  As discussed above, be sure to indicate a non-default compiler if needed on your OS.
@@ -77,6 +81,7 @@ Example:
 #+BEGIN_SRC sh
   $ spack install wirecell-toolkit%gcc@4.9.3
 #+END_SRC
+
 
 * Running 
 
@@ -98,7 +103,7 @@ You can then activate the package you installed above:
 #+END_SRC
 
 
-* Using Spack for Wire Cell Development
+* Development
 
 You can use this package to provide a development environment in a few ways.
 
@@ -154,20 +159,39 @@ Some things to know if working in the build environment.
 
 ** Using Spack Views
 
-If you have the =spack view= command you can use it to make a simple file system view of all the packages providing Wire Cell dependencies.  This greatly simplifies developing Wire Cell outside of Spack.
+A Spack View is a unified directory hierarchy (single =lib/=, =bin/=, etc directories) with symbolic links to the actual installed package files.  It allows for a vastly simplified development environment to be set up.
+
+To use this feature for development, make a view starting at the desired level Wire Cell package.  Since you will be building your own version of this package it should be excluded.
 
 #+BEGIN_SRC sh
-  $ spack view `pwd`/view wirecell-toolkit%gcc@4.9.3
-  $ ls view/
+  $ spack view -p devel -e wirecell-toolkit wirecell-toolkit%gcc@4.9.3
+  $ ls devel/
 #+END_SRC 
 
 A minimum of environment variables are then needed.  Likely candidates are:
 
 #+BEGIN_SRC sh
-export PATH=`pwd`/view/bin:$PATH
-export LD_LIBRARY_PATH=`pwd`/view/lib:$PATH
+  $ export PATH=`pwd`/devel/bin:$PATH
+  $ export LD_LIBRARY_PATH=`pwd`/devel/lib
 #+END_SRC
 
+You can then clone a copy of the Wire Cell code and configure it by pointing at this installation location.  As a special case where you choose to install your development version into the view be sure to exclude WCT package itself (=-e wirecell-toolkit=) and then do:
+
+#+BEGIN_SRC sh
+  $ git clone git@github.com:BNLIF/wire-cell-build.git toolkit
+  $ export MYDEV=`pwd`/devel  # <-- just a bookmark for later
+  $ cd toolkit/
+  $ souce sourceme-prefix-has-deps.sh
+  $ wcb-configure $MYDEV
+  $ ./wcb build install
+  $ wcb-runtime-setup $MYDEV
+  $ wire-cell -h
+  Options:
+    -h [ --help ]         wire-cell [options] [arguments]
+    -a [ --app ] arg      application component to invoke
+    -c [ --config ] arg   provide a configuration file
+    -p [ --plugin ] arg   specify a plugin as name[:lib]
+#+END_SRC
 
 * Development of this package
 
