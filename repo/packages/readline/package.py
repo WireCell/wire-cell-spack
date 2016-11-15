@@ -12,7 +12,6 @@ class Readline(Package):
     #url      = "ftp://ftp.cwru.edu/pub/bash/readline-6.3.tar.gz"
     url      = "http://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz"
 
-    version('7.0', '205b03a87fc83dab653b628c59b9fc91')
     version('6.3', '33c8fb279e981274f485fd91da77e94a')
 
     depends_on("ncurses")
