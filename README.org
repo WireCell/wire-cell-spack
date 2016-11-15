@@ -19,7 +19,7 @@ Notes:
 Get this package's source and cause a copy of Spack to be retrieved:
 
 #+BEGIN_SRC sh
-  $ git https://github.com/wirecell/wire-cell-spack.git
+  $ git clone https://github.com/wirecell/wire-cell-spack.git
   $ cd wire-cell-spack
   $ git submodule init
   $ git submodule update
