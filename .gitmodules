@@ -1,5 +1,7 @@
 [submodule "spack"]
 	path = spack
-	url = git@github.com:brettviren/spack.git
-	branch = wire-cell-toolkit
+	url = https://github.com/LLNL/spack.git
+	branch = develop	
+	#url = git@github.com:brettviren/spack.git
+	#branch = wire-cell-toolkit
 
