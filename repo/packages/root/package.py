@@ -5,8 +5,9 @@ import os
 class Root(Package):
     """ROOT is a data analysis framework."""
     homepage = "https://root.cern.ch"
-    url      = "https://root.cern.ch/download/root_v6.07.02.source.tar.gz"
+    url      = "https://root.cern.ch/download/root_v6.08.00.source.tar.gz"
 
+    version('6.08.00', '8462a530d27fa5ca7718ea4437632c3c')
     version('6.07.06', '1180254be7ece0f16142b14381b22d68')
     version('6.07.02', '3fb585bf9fa6ce06ca503173c8bee107')
     version('6.06.02', 'e9b8b86838f65b0a78d8d02c66c2ec55')

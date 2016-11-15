@@ -34,8 +34,9 @@ class Eigen(Package):
     homepage = 'http://eigen.tuxfamily.org/'
     url = 'http://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'
 
+    version('3.3', 'e2019bc3ffa9bb685969ec12da29673c')
+    version('3.2.10', 'cad3e2079d9d97e9a95f854a298e9c0e')
     version('3.2.8', '9e3bfaaab3db18253cfd87ea697b3ab1')
-
     version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
 
     variant('debug', default=False, description='Builds the library in debug mode')
