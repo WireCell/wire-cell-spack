@@ -11,7 +11,8 @@ class WirecellToolkit(Package):
     depends_on("jsoncpp")
     depends_on("eigen")
     depends_on("tbb")
-    depends_on("boost@1.59.0")
+    # match what is listed in wire-cell-build/wscript
+    depends_on("boost+graph+iostreams+filesystem+system+thread+program_options@1.59.0")
     depends_on("root@6:")
 
     def install(self, spec, prefix):
@@ -27,6 +28,11 @@ class WirecellToolkit(Package):
         cfg += " --boost-libs=%s/lib --boost-includes=%s/include" % \
                (spec["boost"].prefix, spec["boost"].prefix)
         cfg += " --with-root=%s" % spec["root"].prefix
+        cfg += " --with-eigen=%s" % spec["eigen"].prefix
+        cfg += " --with-jsoncpp=%s" % spec["jsoncpp"].prefix
+        cfg += " --with-tbb=%s" % spec["tbb"].prefix
+
+
         cfg += " configure"
         python(*cfg.split())
         python("wcb")

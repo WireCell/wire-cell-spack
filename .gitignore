@@ -4,3 +4,5 @@ spack-mirror*
 *.log
 README.html
 *.moved
+wire-cell-build
+toolkit
