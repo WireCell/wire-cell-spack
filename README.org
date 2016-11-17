@@ -116,7 +116,7 @@ You can then clone a copy of the Wire Cell Toolkit code build package, configure
   $ ./wcb build install
 #+END_EXAMPLE
 
-This installed the toolkit right into the view directory.  That's okay.  You can also point =--prefix= to some other location but then you will also need to add to your =PATH=-like to run the code.
+This installed the toolkit right into the view directory.  That's okay.  You can also point =--prefix= to some other location but then you will also need to add to your =PATH= like variables in order to run the code.  Note, you must still explicitly point to where Boost is installed as it can not be found with =pkg-config=.
 
 
 ** In-situ debug of build failures
