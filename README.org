@@ -2,16 +2,13 @@
 
 * Prerequisites
 
-This package uses Spack to build Wire Cell Toolkit or Prototype and its major dependencies.
-Some dependencies must be provided by your OS.  In particular:
+This package uses Spack to build Wire Cell Toolkit and its major dependencies.
+Before using you also need:
 
 - A suitable C++11 compiler (GCC 4.9+ or GCC 5+)
 - X11 and other system libraries.
 - Ability to download source packages
-
-Notes:
-
- - Spack uses =curl= to download.  If you live behind a proxy set you environment appropriately.
+- Working network connection.  (Spack uses =curl= to download.  Set any needed HTTP proxy variables.)
 
 * Prepare the build environment
 
@@ -60,7 +57,6 @@ One command is needed to install everything.  As discussed above, be sure to ind
 What to install depends on what you want.  Possible options:
 
 - =wirecell-toolkit= :: install the toolkit and its externals
-- =wirecell-prototype= :: install the prototype code (note: not yet added - message me about it if you want it.)
 - =root= ::  just install ROOT6 and its externals
 
 Example:
@@ -88,7 +84,40 @@ You can then activate the package you installed above:
 
 * Development
 
-You can also use this package to provide a development environment.  There are a few approaches described below which have different trade offs in the amount of set up and features.  Pick which one you like best.
+You can leverage Spack-built externals to develope =wirecellt-toolkit=.  This requires exposing and handling some details that Spack otherwise hides, but then you are a developer and expected to be able to cope.
+
+** Using Spack Views
+
+For normal development a "Spack View" provides a simple looking organization of the installed exernal packages.  It produces a single-rooted directory tree with a shared =lib/=, =bin/=, =include/= etc directories.  We make the view based on the top of the dependency tree, =wirecell-toolkit=, but then exclude that package as we will build our own copy to develop.
+
+#+BEGIN_EXAMPLE
+  $ spack view -e wirecell-toolkit add $HOME/wct-dev wirecell-toolkit 
+  $ ls $HOME/wct-dev
+#+END_EXAMPLE
+
+You must now set up minimal set of standard environment variables:
+
+#+BEGIN_EXAMPLE
+  # find executables
+  $ export PATH=$HOME/wct-dev/bin:$PATH
+  # find some external package install locations
+  $ export PKG_CONFIG_PATH_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
+  # find libraries at runtime
+  $ export LD_LIBRARY_PATH=$HOME/wct-dev/lib
+#+END_EXAMPLE
+
+You can then clone a copy of the Wire Cell Toolkit code build package, configure and build:
+
+#+BEGIN_EXAMPLE
+  $ git clone https://github.com/wirecell/wire-cell-build.git toolkit
+  $ cd toolkit/
+  $ ./wcb configure --prefix=$HOME/wct-dev \
+       --boost-includes=$HOME/wct-dev/include --boost-libs=$HOME/wct-dev/lib --boost-mt 
+  $ ./wcb build install
+#+END_EXAMPLE
+
+This installed the toolkit right into the view directory.  That's okay.  You can also point =--prefix= to some other location but then you will also need to add to your =PATH=-like to run the code.
+
 
 ** In-situ debug of build failures
 
@@ -140,38 +169,6 @@ Some things to know if working in the build environment.
 #+END_EXAMPLE
 
 
-** Using Spack Views
-
-A Spack View is a unified directory hierarchy (single =lib/=, =bin/=, etc directories) with symbolic links to the actual Spack-installed package files.  It allows for a very simple development environment which is close to developing against the familiar system locations (=/usr/lib=, =/usr/include=, etc).
-
-In the example below, a filesystem "view" of all the packages needed by =wirecell-toolkit= is made while the =wirecell-toolkit= package itself is excluded as you will provide a development version.  The "view" will be created in the directory =$HOME/wct-dev= but any writable location can be chosen.
-
-#+BEGIN_EXAMPLE
-  $ spack view -e wirecell-toolkit add $HOME/wct-dev wirecell-toolkit 
-  $ ls $HOME/wct-dev
-#+END_EXAMPLE
-
-Through this view all =bin/=, =lib/= and =include/= files can be easily located and =PATH=-like variables need only one entry:
-
-#+BEGIN_EXAMPLE
-  $ export PATH=$HOME/wct-dev/bin:$PATH
-  $ export PKG_CONFIG_PATH_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
-  $ export LD_LIBRARY_PATH=$HOME/wct-dev/lib
-#+END_EXAMPLE
-
-Due to the use of =RPATH= by Spack, setting =LD_LIBRARY_PATH= may not even be needed for some operations.  The =PKG_CONFIG_PATH= will be checked to find externals.
-
-You can then clone a copy of the Wire Cell code build package, configure and build:
-
-#+BEGIN_EXAMPLE
-  $ git clone https://github.com/wirecell/wire-cell-build.git toolkit
-  $ cd toolkit/
-  $ ./wcb configure --prefix=$HOME/wct-dev \
-       --boost-includes=$HOME/wct-dev/include --boost-libs=$HOME/wct-dev/lib --boost-mt 
-  $ ./wcb build install
-#+END_EXAMPLE
-
-Note, this example will also install Wire Cell Toolikit, itself, right into the view directory.  Some other installation location can also be chosen but then =PATH=-like variables will need an update, accordingly.
 
 
 * Development of this package
