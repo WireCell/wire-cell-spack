@@ -6,3 +6,4 @@ README.html
 *.moved
 wire-cell-build
 toolkit
+waf-tools

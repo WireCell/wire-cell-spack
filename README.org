@@ -155,44 +155,23 @@ Through this view all =bin/=, =lib/= and =include/= files can be easily located 
 
 #+BEGIN_EXAMPLE
   $ export PATH=$HOME/wct-dev/bin:$PATH
+  $ export PKG_CONFIG_PATH_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
   $ export LD_LIBRARY_PATH=$HOME/wct-dev/lib
 #+END_EXAMPLE
 
-Due to the use of =RPATH= by Spack, setting =LD_LIBRARY_PATH= may not even be needed for some operations.
+Due to the use of =RPATH= by Spack, setting =LD_LIBRARY_PATH= may not even be needed for some operations.  The =PKG_CONFIG_PATH= will be checked to find externals.
 
-You can then clone a copy of the Wire Cell code and configure it by pointing at this installation location. 
+You can then clone a copy of the Wire Cell code build package, configure and build:
 
 #+BEGIN_EXAMPLE
   $ git clone https://github.com/wirecell/wire-cell-build.git toolkit
   $ cd toolkit/
-  $ ./wcb configure \
-    --with-eigen=$HOME/wct-dev \
-    --with-jsoncpp=$HOME/wct-dev \
-    --with-tbb=$HOME/wct-dev \
-    --boost-includes=$HOME/wct-dev/include \
-    --boost-libs=$HOME/wct-dev/lib \
-    --boost-mt \
-    --with-root=$HOME/wct-dev \
-    --prefix=$HOME/wct-dev
-#+END_EXAMPLE
-
-Note, this will also install Wire Cell Toolikit, itself, right into the view directory.  Some other installation location can also be chosen but then =PATH=-like variables will need an update, accordingly.
-
-In this case where you choose to install your into the Spack "view" a little helper script is provided to allow not having to type all the above:
-
-#+BEGIN_EXAMPLE
-  $ cd toolkit/
-  $ souce sourceme-prefix-has-deps.sh
-  $ wcb-configure $HOME/wct-dev
+  $ ./wcb configure --prefix=$HOME/wct-dev
   $ ./wcb build install
-  $ wcb-runtime-setup $HOME/wct-dev
-  $ wire-cell -h
-  Options:
-    -h [ --help ]         wire-cell [options] [arguments]
-    -a [ --app ] arg      application component to invoke
-    -c [ --config ] arg   provide a configuration file
-    -p [ --plugin ] arg   specify a plugin as name[:lib]
 #+END_EXAMPLE
+
+Note, this example will also install Wire Cell Toolikit, itself, right into the view directory.  Some other installation location can also be chosen but then =PATH=-like variables will need an update, accordingly.
+
 
 * Development of this package
 
