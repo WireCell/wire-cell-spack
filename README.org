@@ -166,7 +166,8 @@ You can then clone a copy of the Wire Cell code build package, configure and bui
 #+BEGIN_EXAMPLE
   $ git clone https://github.com/wirecell/wire-cell-build.git toolkit
   $ cd toolkit/
-  $ ./wcb configure --prefix=$HOME/wct-dev
+  $ ./wcb configure --prefix=$HOME/wct-dev \
+       --boost-includes=$HOME/wct-dev/include --boost-libs=$HOME/wct-dev/lib --boost-mt 
   $ ./wcb build install
 #+END_EXAMPLE
 
