@@ -9,7 +9,7 @@ class WirecellToolkit(Package):
     version('dev', git="https://github.com/WireCell/wire-cell-build.git")
 
     depends_on("jsoncpp")
-    depends_on("eigen")
+    depends_on("eigen@3.3.0")
     depends_on("tbb")
     # match what is listed in wire-cell-build/wscript
     depends_on("boost+graph+iostreams+filesystem+system+thread+program_options@1.59.0")
