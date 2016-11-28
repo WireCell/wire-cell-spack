@@ -101,7 +101,7 @@ You must now set up minimal set of standard environment variables:
   # find executables
   $ export PATH=$HOME/wct-dev/bin:$PATH
   # find some external package install locations
-  $ export PKG_CONFIG_PATH_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
+  $ export PKG_CONFIG_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
   # find libraries at runtime
   $ export LD_LIBRARY_PATH=$HOME/wct-dev/lib
 #+END_EXAMPLE
