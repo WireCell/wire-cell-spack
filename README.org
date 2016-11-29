@@ -5,14 +5,26 @@
 This package uses Spack to build Wire Cell Toolkit and its major dependencies.
 Before using you also need:
 
-- A suitable C++11 compiler (GCC 4.9+ or GCC 5+)
-- X11 and other system libraries.
+- A suitable C++11 compiler (GCC 4.8, GCC 4.9 or GCC 5.x)
+- X11 and other system libraries. (see below)
 - Ability to download source packages
 - Working network connection.  (Spack uses =curl= to download.  Set any needed HTTP proxy variables.)
 
+Although ROOT is not used in the core of Wire Cell Toolkit, it is used for some units tests and it provides a good summary of what OS packages are likely needed.  See [[https://root.cern.ch/build-prerequisites][this page]] for details.  But, not all packages listed there are needed as Spack will build them.  See below for setting up Spack.  When you have, you can find out what packages Spack will build by doing:
+
+#+BEGIN_EXAMPLE
+  $ spack spec wirecell-toolkit
+#+END_EXAMPLE
+
+For Ubuntu, this is a minimum:
+
+#+BEGIN_EXAMPLE
+  $ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev 
+#+END_EXAMPLE
+
 * Prepare the build environment
 
-Get this package's source and cause a copy of Spack to be retrieved:
+Get this package's source and use =git submodule= to get a copy of Spack:
 
 #+BEGIN_EXAMPLE
   $ git clone https://github.com/wirecell/wire-cell-spack.git
@@ -30,43 +42,23 @@ One time setup:
   $ spack repo add repo
 #+END_EXAMPLE
 
-Beware that if you use Spack in other contexts, adding a repo is a
-global operation and may cause interference.  Check your =~/.spack=
-directory if you suspect this.
+Notes:
 
-#+BEGIN_EXAMPLE
-  $ spack list
-#+END_EXAMPLE
-
-You should find various Wire Cell packages, ROOT, etc listed.
-
-Anytime you revisit this project from a fresh shell session you will need to repeat the set up:
-
-#+BEGIN_EXAMPLE
-  $ source spack/share/spack/setup-env.sh
-#+END_EXAMPLE
+- =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.sh= but are on their own.
+- Beware that if you use Spack in other contexts, adding a repo is a global operation and may cause interference.  Check your =~/.spack= directory if you suspect this.
 
 * Install
 
-One command is needed to install everything.  As discussed above, be sure to indicate a non-default compiler if needed on your OS.
+One command is needed to install everything.
 
-#+BEGIN_EXAMPLE
-  $ spack install <packagename> [%<compiler>@<version>]
-#+END_EXAMPLE
-
-What to install depends on what you want.  Possible options:
-
-- =wirecell-toolkit= :: install the toolkit and its externals
-- =root= ::  just install ROOT6 and its externals
-
-Example:
 #+BEGIN_EXAMPLE
   $ spack install wirecell-toolkit
 #+END_EXAMPLE
 
+
 * Running 
 
-See below for options for developers.  For users, Spack can also set environment variables needed to use the software.  It does this through the [[http://modules.sf.net/][Environment Modules]] system which needs to be installed and configured.  On Ubuntu and similar:
+*Developers*, you may want to skip this section.  For *end users*, Spack can set the environment variables needed to use the software it installed.  It does this through the [[http://modules.sf.net/][Environment Modules]] (EM) system.  EM needs to be installed and configured outside of Spack.  On Ubuntu and similar:
 
 #+BEGIN_EXAMPLE
   $ sudo apt-get install environment-modules
@@ -84,27 +76,29 @@ You can then activate the package you installed above:
 
 * Development
 
-You can leverage Spack-built externals to develope =wirecellt-toolkit=.  This requires exposing and handling some details that Spack otherwise hides, but then you are a developer and expected to be able to cope.
+You can develop Wire Cell Toolkit, itself, using the external packages built by Spack as above in a variety of ways. Each section below describes one approach.  The first one is recommended.
 
 ** Using Spack Views
 
-For normal development a "Spack View" provides a simple looking organization of the installed exernal packages.  It produces a single-rooted directory tree with a shared =lib/=, =bin/=, =include/= etc directories.  We make the view based on the top of the dependency tree, =wirecell-toolkit=, but then exclude that package as we will build our own copy to develop.
+A "Spack View" produces a simple, single-rooted directory tree with shared =lib/=, =bin/=, =include/= etc directories in a way similar to =/usr/local=.  The files produced by =spack install= are merged into the directory tree with symbolic links with the =spack view= command.  This command takes one or more "seed" packages and builds the "view" from them and all their dependencies.  The command can also be given a list of packages to /exclude/ from the view.  For an environment in which to develop =wirecellt-toolkit= we want all of the toolkit's externals but not the toolkit itself as we will build and install that manually as part of our development.  
+
+Describing all that takes much more than just running the command:
 
 #+BEGIN_EXAMPLE
   $ spack view -e wirecell-toolkit add $HOME/wct-dev wirecell-toolkit 
-  $ ls $HOME/wct-dev
+  $ ls -l $HOME/wct-dev
+  $ ls -l $HOME/wct-dev/lib
 #+END_EXAMPLE
 
-You must now set up minimal set of standard environment variables:
+You must now set up minimal set of standard environment variables pointing into the view:
 
 #+BEGIN_EXAMPLE
-  # find executables
   $ export PATH=$HOME/wct-dev/bin:$PATH
-  # find some external package install locations
   $ export PKG_CONFIG_PATH=$HOME/wct-dev/lib/pkgconfig:$HOME/wct-dev/share/pkgconfig
-  # find libraries at runtime
   $ export LD_LIBRARY_PATH=$HOME/wct-dev/lib
 #+END_EXAMPLE
+
+For =tcsh= users, change to =setenv= accordingly.  *Note:* once the view is made you no longer need Spack and in particular you do *not* need to source the =spack-env.sh= file to use this view.
 
 You can then clone a copy of the Wire Cell Toolkit code build package, configure and build:
 
@@ -116,8 +110,20 @@ You can then clone a copy of the Wire Cell Toolkit code build package, configure
   $ ./wcb build install
 #+END_EXAMPLE
 
-This installed the toolkit right into the view directory.  That's okay.  You can also point =--prefix= to some other location but then you will also need to add to your =PATH= like variables in order to run the code.  Note, you must still explicitly point to where Boost is installed as it can not be found with =pkg-config=.
+Notes:
 
+- Take care to observe the output of this =configure= command to see that externals are found in your view.
+
+- The installation location (=--prefix=) also uses the Spack View.  That's okay.
+
+- You can pick a different =--prefix= but then you must add yet again this location to =PATH= like variables. 
+
+-  In general, external are found by setting =PKG_CONFIG_PATH= however, for now, you must explicitly point to where Boost is installed.  Run "./wcb --help" for a full list of options.
+
+
+** Using Environment Modules
+
+Basically follow section on [[Running]] and then run =./wcb configure --with-PACKAGE== pointing to all the fine-grained installation locations.  Details on this are t.b.d.
 
 ** In-situ debug of build failures
 
