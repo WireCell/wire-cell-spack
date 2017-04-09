@@ -11,6 +11,7 @@ class WirecellToolkit(Package):
     depends_on("jsoncpp")
     depends_on("eigen@3.3.0")
     depends_on("tbb")
+    depends_on("fftw")
     # match what is listed in wire-cell-build/wscript
     depends_on("boost+graph+iostreams+filesystem+system+thread+program_options@1.59.0")
     depends_on("root@6:")
@@ -31,6 +32,7 @@ class WirecellToolkit(Package):
         cfg += " --with-eigen=%s" % spec["eigen"].prefix
         cfg += " --with-jsoncpp=%s" % spec["jsoncpp"].prefix
         cfg += " --with-tbb=%s" % spec["tbb"].prefix
+        cfg += " --with-fftw=%s" % spec["fftw"].prefix
 
 
         cfg += " configure"
