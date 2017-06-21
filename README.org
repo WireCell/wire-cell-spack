@@ -1,11 +1,10 @@
-#+TITLE: Build Wire Cell With Spack
+This package provides [[https://github.com/llnl/spack][Spack]] support for building [[https://wirecell.github.io/][Wire Cell Toolkit]] and [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
 
 * Prerequisites
 
-This package uses Spack to build Wire Cell Toolkit and its major dependencies.
-Before using you also need:
+Before using this package you will need:
 
-- A suitable C++11 compiler (GCC 4.8, GCC 4.9 or GCC 5.x)
+- A suitable C++14 compiler, eg: GCC 4.9 or GCC 5.x, Clang (less tested)
 - X11 and other system libraries. (see below)
 - Ability to download source packages
 - Working network connection.  (Spack uses =curl= to download.  Set any needed HTTP proxy variables.)
