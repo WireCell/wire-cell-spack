@@ -1,7 +1,7 @@
 from spack import *
 import os
 class WirecellToolkit(Package):
-    """Description"""
+    """Wire Cell Toolkit provides simulation, signal processing and reconstruction for LArTPC"""
 
     homepage = "http://wirecell.github.io"
     #url = "http://wirecell.github.io"
@@ -9,6 +9,7 @@ class WirecellToolkit(Package):
     version('dev', git="https://github.com/WireCell/wire-cell-build.git")
 
     depends_on("jsoncpp")
+    depends_on("jsonnet")
     depends_on("eigen@3.3.0")
     depends_on("tbb")
     depends_on("fftw")
@@ -31,6 +32,7 @@ class WirecellToolkit(Package):
         cfg += " --with-root=%s" % spec["root"].prefix
         cfg += " --with-eigen=%s" % spec["eigen"].prefix
         cfg += " --with-jsoncpp=%s" % spec["jsoncpp"].prefix
+        cfg += " --with-jsonnet=%s" % spec["jsonnet"].prefix
         cfg += " --with-tbb=%s" % spec["tbb"].prefix
         cfg += " --with-fftw=%s" % spec["fftw"].prefix
 

@@ -23,7 +23,7 @@ class Root(Package):
     depends_on("gsl")
     depends_on("libxml2+python")
     depends_on("jpeg")
-    depends_on("openssl@1.0.2j")
+    depends_on("openssl@1.0.2l")
     depends_on("freetype")
     if sys.platform != 'darwin': 
         depends_on("libpng")

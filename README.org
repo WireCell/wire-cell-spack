@@ -1,4 +1,16 @@
+#+TITLE: Build Wire Cell With Spack
+
 This package provides [[https://github.com/llnl/spack][Spack]] support for building [[https://wirecell.github.io/][Wire Cell Toolkit]] and [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
+
+* I'm feeling lucky
+
+#+BEGIN_EXAMPLE
+  $ git clone --recursive https://github.com/wirecell/wire-cell-spack.git
+  $ cd wire-cell-spack
+  $ source spack/share/spack/setup-env.sh
+  $ spack repo add repo
+  $ spack install wirecell-toolkit
+#+END_EXAMPLE
 
 * Prerequisites
 
@@ -9,32 +21,30 @@ Before using this package you will need:
 - Ability to download source packages
 - Working network connection.  (Spack uses =curl= to download.  Set any needed HTTP proxy variables.)
 
-Although ROOT is not used in the core of Wire Cell Toolkit, it is used for some units tests and it provides a good summary of what OS packages are likely needed.  See [[https://root.cern.ch/build-prerequisites][this page]] for details.  But, not all packages listed there are needed as Spack will build them.  See below for setting up Spack.  When you have, you can find out what packages Spack will build by doing:
-
-#+BEGIN_EXAMPLE
-  $ spack spec wirecell-toolkit
-#+END_EXAMPLE
-
-For Ubuntu, this is a minimum:
+For Ubuntu, a minimum set of OS packages are installed with:
 
 #+BEGIN_EXAMPLE
   $ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev 
 #+END_EXAMPLE
 
-* Prepare the build environment
-
-Get this package's source and use =git submodule= to get a copy of Spack:
+ROOT provides [[https://root.cern.ch/build-prerequisites][this page]] listing what it needs in general but Spack will provide some of these as shown by the output of:
 
 #+BEGIN_EXAMPLE
-  $ git clone https://github.com/wirecell/wire-cell-spack.git
-  $ cd wire-cell-spack
-  $ git submodule init
-  $ git submodule update
+  $ spack spec wirecell-toolkit
 #+END_EXAMPLE
 
-* Set up Spack.
+The difference between these two sets must be provided by your OS or other means.
 
-One time setup:
+* Prepare the build environment
+
+#+BEGIN_EXAMPLE
+  $ git clone --recursive https://github.com/wirecell/wire-cell-spack.git
+  $ cd wire-cell-spack
+#+END_EXAMPLE
+
+This will also clone a particular copy of Spack into the ~spack/~ submodule.
+
+* Set up Spack.
 
 #+BEGIN_EXAMPLE
   $ source spack/share/spack/setup-env.sh
@@ -44,7 +54,9 @@ One time setup:
 Notes:
 
 - =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.sh= but are on their own.
-- Beware that if you use Spack in other contexts, adding a repo is a global operation and may cause interference.  Check your =~/.spack= directory if you suspect this.
+- Beware if you maintain more than one Spack area (specifically more than one set of Spack repos).  Adding a repo is a global operation and may cause interference.  Check your =~/.spack/linux/repos.yaml= file.
+- If you have multiple compilers installed on your system it's recommended to check which one Spack will use by running =spack compliers=.  More info in the Compiler configuration section of Spack's [[http://spack.readthedocs.io/en/latest/getting_started.html][Getting Started]] manual section. 
+- If your system does not have an adequate compiler you can [[http://spack.readthedocs.io/en/latest/getting_started.html?highlight=compilers#build-your-own-compiler][use Spack to build one]].
 
 * Install
 
@@ -54,6 +66,23 @@ One command is needed to install everything.
   $ spack install wirecell-toolkit
 #+END_EXAMPLE
 
+* Troubleshooting the Install
+
+** Failure to download a package source
+
+The number one failure mode is failure to download some source package.  This can be intermittent or due to your local network policies.  The best way to avoid this is to make or use a [[http://spack.readthedocs.io/en/latest/mirrors.html][Spack source mirror]].  BNL provides one which can be used by running:
+
+#+BEGIN_EXAMPLE
+  $ spack mirror add bnl http://www.phy.bnl.gov/~bviren/wire-cell-spack-mirror/
+#+END_EXAMPLE
+
+This modifies =~/.spack/linux/mirrors.yaml=.  You may choose to manually mirror this mirror to your own server or local directory.  For the latter you'd register your own mirror like:
+
+#+BEGIN_EXAMPLE
+  $ spack mirror add mymirror file:///path/to/mymirror
+#+END_EXAMPLE
+
+You may also be able to supply Spack with source packages on a case-by-case basis by adding source archives under =spack/var/spack/cache/<package>/=.
 
 * Running 
 
