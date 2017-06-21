@@ -63,10 +63,20 @@ Notes:
 One command is needed to install everything.
 
 #+BEGIN_EXAMPLE
-  $ spack install wirecell-toolkit
+  $ spack install wirecell-toolkit          # (1)
+  $ spack install wirecell-toolkit@0.5.2    # (2)
+  $ spack install wirecell-prototype        # (3)
 #+END_EXAMPLE
 
+Notes:
+
+1) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Toolkit*
+2) Install *release 0.5.2* of the Wire Cell *Toolkit* (see [[https://github.com/WireCell/wire-cell-build/releases][available releases]])
+3) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Prototype*
+
 * Troubleshooting the Install
+
+Some known problems and their solutions are given here.
 
 ** Failure to download a package source
 
@@ -101,6 +111,7 @@ You can then activate the package you installed above:
   $ wire-cell -h
 #+END_EXAMPLE
 
+End users may also prefer the "Spack view" approach described below.
 
 * Development
 
@@ -209,7 +220,7 @@ Some things to know if working in the build environment.
 
 Some notes on developing the =wire-cell-spack= package itself.
 
-** Add new version
+** Add new version of external
 
 #+BEGIN_EXAMPLE
   $ spack checksum --keep-stage root 6.07.06
@@ -217,6 +228,26 @@ Some notes on developing the =wire-cell-spack= package itself.
 	version('6.07.06', '1180254be7ece0f16142b14381b22d68')
 #+END_EXAMPLE
 
-This line can be pasted into the =root/package.py= file.
+This line can be pasted into the [[./repo/packages/root/package.py]] file.
 
+** Add a new version of WCT
 
+Released versions of WCT can be added with a line like:
+
+#+BEGIN_EXAMPLE
+    version('0.5.2', git="https://github.com/WireCell/wire-cell-build.git", tag="0.5.2")
+#+END_EXAMPLE
+
+added to [[./repo/packages/wirecell-toolkit/package.py]].
+
+** Mirror 
+
+The source package mirror is rather manual to update.
+
+#+BEGIN_EXAMPLE
+$ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>
+# or
+$ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>@<version>
+#+END_EXAMPLE
+
+At least with the linked Spack 0.10.0, neither recursive package adding nor listing many packages on one command line works.
