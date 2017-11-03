@@ -1,6 +1,6 @@
 #+TITLE: Build Wire Cell With Spack
 
-This package provides [[https://github.com/llnl/spack][Spack]] support for building [[https://wirecell.github.io/][Wire Cell Toolkit]] and [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
+This package provides support for using [[https://github.com/llnl/spack][Spack]] v0.10 to build the [[https://wirecell.github.io/][Wire Cell Toolkit]], the [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
 
 * I'm feeling lucky
 
@@ -25,9 +25,12 @@ For Ubuntu, a minimum set of OS packages are installed with:
 
 #+BEGIN_EXAMPLE
   $ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev 
+  $ sudo apt-get install libglu1-mesa-dev libglew-dev
 #+END_EXAMPLE
 
-ROOT provides [[https://root.cern.ch/build-prerequisites][this page]] listing what it needs in general but Spack will provide some of these as shown by the output of:
+The second set are required for Eve support in ROOT which may be useful, but not strictly needed by Wire-Cell.
+ROOT provides [[https://root.cern.ch/build-prerequisites][this page]] listing what it needs in general. 
+Spack will provide some of these as shown by the output of:
 
 #+BEGIN_EXAMPLE
   $ spack spec wirecell-toolkit
@@ -53,25 +56,26 @@ This will also clone a particular copy of Spack into the ~spack/~ submodule.
 
 Notes:
 
-- =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.sh= but are on their own.
+- =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.csh= but are on their own.
 - Beware if you maintain more than one Spack area (specifically more than one set of Spack repos).  Adding a repo is a global operation and may cause interference.  Check your =~/.spack/linux/repos.yaml= file.
 - If you have multiple compilers installed on your system it's recommended to check which one Spack will use by running =spack compliers=.  More info in the Compiler configuration section of Spack's [[http://spack.readthedocs.io/en/latest/getting_started.html][Getting Started]] manual section. 
 - If your system does not have an adequate compiler you can [[http://spack.readthedocs.io/en/latest/getting_started.html?highlight=compilers#build-your-own-compiler][use Spack to build one]].
+- By default, Spack will use =/tmp= for build temporaries and will install results under the directory where Spack source was cloned (=wire-cell-spack/spack/=).  These locations can be changed by editing =spack/etc/spack/defaults/config.yaml= before continuing on to the [[Install]] section below.
 
 * Install
 
 One command is needed to install everything.
 
 #+BEGIN_EXAMPLE
-  $ spack install wirecell-toolkit          # (1)
-  $ spack install wirecell-toolkit@0.5.2    # (2)
+  $ spack install wirecell-toolkit@dev      # (1)
+  $ spack install wirecell-toolkit@0.6.2    # (2)
   $ spack install wirecell-prototype        # (3)
 #+END_EXAMPLE
 
 Notes:
 
-1) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Toolkit*
-2) Install *release 0.5.2* of the Wire Cell *Toolkit* (see [[https://github.com/WireCell/wire-cell-build/releases][available releases]])
+1) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Toolkit* (see also [[Development]] below).
+2) Install *release 0.6.2* of the Wire Cell *Toolkit* (see [[https://github.com/WireCell/wire-cell-build/releases][available releases]])
 3) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Prototype*
 
 * Troubleshooting the Install
@@ -235,7 +239,7 @@ This line can be pasted into the [[./repo/packages/root/package.py]] file.
 Released versions of WCT can be added with a line like:
 
 #+BEGIN_EXAMPLE
-    version('0.5.2', git="https://github.com/WireCell/wire-cell-build.git", tag="0.5.2")
+    version('0.6.2', git="https://github.com/WireCell/wire-cell-build.git", tag="0.6.2")
 #+END_EXAMPLE
 
 added to [[./repo/packages/wirecell-toolkit/package.py]].

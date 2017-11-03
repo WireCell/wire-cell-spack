@@ -6,20 +6,15 @@ class WirecellPrototype(Package):
     homepage = "http://bnlif.github.io/wire-cell-docs/"
     #url = "http://wirecell.github.io"
 
-    version('dev', git="https://github.com/BNLIF/wire-cell.git")
+    version('dev', git="https://github.com/BNLIF/wire-cell.git", submodules=True)
 
-    depends_on("eigen@3.3.0")
+    depends_on("eigen@3.3.4")
     depends_on("fftw")
     # match what is listed in wire-cell-build/wscript
     depends_on("boost+graph+iostreams+filesystem+system+thread+program_options@1.59.0")
     depends_on("root@6:")
 
     def install(self, spec, prefix):
-        bash = which("bash")
-        bash("./switch-git-urls")
-        git = which("git")
-        git('submodule','init')
-        git('submodule','update')
 
         cfg = "./waf-tools/waf -v -v"
         cfg += " --prefix=%s" % prefix
