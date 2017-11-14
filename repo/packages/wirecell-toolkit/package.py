@@ -36,7 +36,8 @@ class WirecellToolkit(Package):
         cfg += " --with-eigen=%s" % spec["eigen"].prefix
         cfg += " --with-jsoncpp=%s" % spec["jsoncpp"].prefix
         cfg += " --with-jsonnet=%s" % spec["jsonnet"].prefix
-        cfg += " --with-tbb=%s" % spec["tbb"].prefix
+#        cfg += " --with-tbb=%s" % spec["tbb"].prefix
+        cfg += " --with-tbb=false" # for now
         cfg += " --with-fftw=%s" % spec["fftw"].prefix
 
 
