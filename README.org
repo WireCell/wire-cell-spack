@@ -1,4 +1,16 @@
-This package provides [[https://github.com/llnl/spack][Spack]] support for building [[https://wirecell.github.io/][Wire Cell Toolkit]] and [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
+#+TITLE: Build Wire Cell With Spack
+
+This package provides support for using [[https://github.com/llnl/spack][Spack]] v0.10 to build the [[https://wirecell.github.io/][Wire Cell Toolkit]], the [[http://bnlif.github.io/wire-cell-docs/][Wire Cell Prototype]] software and/or their software dependencies.
+
+* I'm feeling lucky
+
+#+BEGIN_EXAMPLE
+  $ git clone --recursive https://github.com/wirecell/wire-cell-spack.git
+  $ cd wire-cell-spack
+  $ source spack/share/spack/setup-env.sh
+  $ spack repo add repo
+  $ spack install wirecell-toolkit
+#+END_EXAMPLE
 
 * Prerequisites
 
@@ -9,32 +21,33 @@ Before using this package you will need:
 - Ability to download source packages
 - Working network connection.  (Spack uses =curl= to download.  Set any needed HTTP proxy variables.)
 
-Although ROOT is not used in the core of Wire Cell Toolkit, it is used for some units tests and it provides a good summary of what OS packages are likely needed.  See [[https://root.cern.ch/build-prerequisites][this page]] for details.  But, not all packages listed there are needed as Spack will build them.  See below for setting up Spack.  When you have, you can find out what packages Spack will build by doing:
+For Ubuntu, a minimum set of OS packages are installed with:
+
+#+BEGIN_EXAMPLE
+  $ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev 
+  $ sudo apt-get install libglu1-mesa-dev libglew-dev
+#+END_EXAMPLE
+
+The second set are required for Eve support in ROOT which may be useful, but not strictly needed by Wire-Cell.
+ROOT provides [[https://root.cern.ch/build-prerequisites][this page]] listing what it needs in general. 
+Spack will provide some of these as shown by the output of:
 
 #+BEGIN_EXAMPLE
   $ spack spec wirecell-toolkit
 #+END_EXAMPLE
 
-For Ubuntu, this is a minimum:
-
-#+BEGIN_EXAMPLE
-  $ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev 
-#+END_EXAMPLE
+The difference between these two sets must be provided by your OS or other means.
 
 * Prepare the build environment
 
-Get this package's source and use =git submodule= to get a copy of Spack:
-
 #+BEGIN_EXAMPLE
-  $ git clone https://github.com/wirecell/wire-cell-spack.git
+  $ git clone --recursive https://github.com/wirecell/wire-cell-spack.git
   $ cd wire-cell-spack
-  $ git submodule init
-  $ git submodule update
 #+END_EXAMPLE
 
-* Set up Spack.
+This will also clone a particular copy of Spack into the ~spack/~ submodule.
 
-One time setup:
+* Set up Spack.
 
 #+BEGIN_EXAMPLE
   $ source spack/share/spack/setup-env.sh
@@ -43,17 +56,47 @@ One time setup:
 
 Notes:
 
-- =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.sh= but are on their own.
-- Beware that if you use Spack in other contexts, adding a repo is a global operation and may cause interference.  Check your =~/.spack= directory if you suspect this.
+- =bash= is the recommended shell.  =tcsh= users may try sourcing =setup-env.csh= but are on their own.
+- Beware if you maintain more than one Spack area (specifically more than one set of Spack repos).  Adding a repo is a global operation and may cause interference.  Check your =~/.spack/linux/repos.yaml= file.
+- If you have multiple compilers installed on your system it's recommended to check which one Spack will use by running =spack compliers=.  More info in the Compiler configuration section of Spack's [[http://spack.readthedocs.io/en/latest/getting_started.html][Getting Started]] manual section. 
+- If your system does not have an adequate compiler you can [[http://spack.readthedocs.io/en/latest/getting_started.html?highlight=compilers#build-your-own-compiler][use Spack to build one]].
+- By default, Spack will use =/tmp= for build temporaries and will install results under the directory where Spack source was cloned (=wire-cell-spack/spack/=).  These locations can be changed by editing =spack/etc/spack/defaults/config.yaml= before continuing on to the [[Install]] section below.
 
 * Install
 
 One command is needed to install everything.
 
 #+BEGIN_EXAMPLE
-  $ spack install wirecell-toolkit
+  $ spack install wirecell-toolkit@dev      # (1)
+  $ spack install wirecell-toolkit@0.6.2    # (2)
+  $ spack install wirecell-prototype        # (3)
 #+END_EXAMPLE
 
+Notes:
+
+1) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Toolkit* (see also [[Development]] below).
+2) Install *release 0.6.2* of the Wire Cell *Toolkit* (see [[https://github.com/WireCell/wire-cell-build/releases][available releases]])
+3) Install the *development* version (tip of ~master~ branch) of the Wire Cell *Prototype*
+
+* Troubleshooting the Install
+
+Some known problems and their solutions are given here.
+
+** Failure to download a package source
+
+The number one failure mode is failure to download some source package.  This can be intermittent or due to your local network policies.  The best way to avoid this is to make or use a [[http://spack.readthedocs.io/en/latest/mirrors.html][Spack source mirror]].  BNL provides one which can be used by running:
+
+#+BEGIN_EXAMPLE
+  $ spack mirror add bnl http://www.phy.bnl.gov/~bviren/wire-cell-spack-mirror/
+#+END_EXAMPLE
+
+This modifies =~/.spack/linux/mirrors.yaml=.  You may choose to manually mirror this mirror to your own server or local directory.  For the latter you'd register your own mirror like:
+
+#+BEGIN_EXAMPLE
+  $ spack mirror add mymirror file:///path/to/mymirror
+#+END_EXAMPLE
+
+You may also be able to supply Spack with source packages on a case-by-case basis by adding source archives under =spack/var/spack/cache/<package>/=.
 
 * Running 
 
@@ -72,6 +115,7 @@ You can then activate the package you installed above:
   $ wire-cell -h
 #+END_EXAMPLE
 
+End users may also prefer the "Spack view" approach described below.
 
 * Development
 
@@ -180,7 +224,7 @@ Some things to know if working in the build environment.
 
 Some notes on developing the =wire-cell-spack= package itself.
 
-** Add new version
+** Add new version of external
 
 #+BEGIN_EXAMPLE
   $ spack checksum --keep-stage root 6.07.06
@@ -188,6 +232,26 @@ Some notes on developing the =wire-cell-spack= package itself.
 	version('6.07.06', '1180254be7ece0f16142b14381b22d68')
 #+END_EXAMPLE
 
-This line can be pasted into the =root/package.py= file.
+This line can be pasted into the [[./repo/packages/root/package.py]] file.
 
+** Add a new version of WCT
 
+Released versions of WCT can be added with a line like:
+
+#+BEGIN_EXAMPLE
+    version('0.6.2', git="https://github.com/WireCell/wire-cell-build.git", tag="0.6.2")
+#+END_EXAMPLE
+
+added to [[./repo/packages/wirecell-toolkit/package.py]].
+
+** Mirror 
+
+The source package mirror is rather manual to update.
+
+#+BEGIN_EXAMPLE
+$ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>
+# or
+$ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>@<version>
+#+END_EXAMPLE
+
+At least with the linked Spack 0.10.0, neither recursive package adding nor listing many packages on one command line works.
