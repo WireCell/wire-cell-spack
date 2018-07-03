@@ -7,6 +7,7 @@ class Jsonnet(Package):
     homepage = "http://jsonnet.org"
     url      = "https://github.com/google/jsonnet/archive/v0.9.3.tar.gz"
 
+    version('0.10.0', '5b98029f90296dc16afa98fcada81b78')
     version('0.9.3', '6715f8f08c4de0b65401a5f0b017f55a')
     version('0.9.2', '9332c94fd65ae855d9185cc6479ba022')
     version('0.9.1', '0993ddfdbe8ac1f2ce17f9356d7cfb89')

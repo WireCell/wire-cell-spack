@@ -163,6 +163,36 @@ Notes:
 
 -  In general, external are found by setting =PKG_CONFIG_PATH= however, for now, you must explicitly point to where Boost is installed.  Run "./wcb --help" for a full list of options.
 
+** Updating Spack Views
+
+From time to time it is required to update the version of a
+dependency.  For example, an update to Jsonnet to 0.10.0 was needed.  To
+build it and add it to the view created above one does:
+
+#+BEGIN_EXAMPLE
+  $ cd wire-cell-spack
+  $ git pull
+  $ source spack/share/spack/setup-env.sh
+  $ spack install jsonnet  # note 0.10.0 is built and installed
+  $ spack view add $HOME/wct-dev jsonnet@0.10.0
+#+END_EXAMPLE
+
+If that fails, it will print out something like:
+
+#+BEGIN_EXAMPLE
+  ==> Error: [/opt/spack/views/wct-dev] Package conflict detected:
+     (Linked) jsonnet@0.9.3%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /cxnybtl
+  (Specified) jsonnet@0.10.0%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64 /62mg6uo
+#+END_EXAMPLE
+
+Remove the old Jsonnet using the hash and re-add like:
+
+#+BEGIN_EXAMPLE
+  $ spack view remove /opt/spack/views/wct-dev jsonnet/cxnybtl
+  $ spack view add /opt/spack/views/wct-dev jsonnet@0.10.0
+#+END_EXAMPLE
+
+You will now very likely need to rebuild your WCT or WCP development area.
 
 ** Using Environment Modules
 
@@ -249,9 +279,8 @@ added to [[./repo/packages/wirecell-toolkit/package.py]].
 The source package mirror is rather manual to update.
 
 #+BEGIN_EXAMPLE
-$ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>
-# or
+$ spack mirror create -D -d ~/public_html/wire-cell-spack-mirror <package>
+# or just target one
 $ spack mirror create -d ~/public_html/wire-cell-spack-mirror <package>@<version>
 #+END_EXAMPLE
 
-At least with the linked Spack 0.10.0, neither recursive package adding nor listing many packages on one command line works.
