@@ -33,6 +33,7 @@ class WireCellToolkit(Package):
 
     # just for build time (for waf/wcb)
     depends_on('python', type=('build',)) 
+    depends_on('pkgconfig', type=('build',)) 
 
     # required
     depends_on('eigen @3.3.0:')
@@ -42,8 +43,8 @@ class WireCellToolkit(Package):
     depends_on('boost @1.77.0: cxxstd=17')
 
     # we need one or the other
-    depends_on('jsonnet @0.17.0:', when='+cppjsonnet')
-    depends_on('go-jsonnet @0.17.0:', when='~cppjsonnet')
+    depends_on('jsonnet @0.18.0: +python', when='+cppjsonnet')
+    depends_on('go-jsonnet @0.18.0: +python', when='~cppjsonnet')
 
     # optional
     depends_on('intel-tbb @2021.1.1: cxxstd=17', when='+tbb')
@@ -53,4 +54,18 @@ class WireCellToolkit(Package):
 
     def install(self, spec, prefix):
         cfg = ["./wcb", "configure", "--prefix={0}".format(prefix)]
-        shell(cfg)
+        # fixme: honor cppjsonnet variant
+        cfg += [
+            "--with-jsonnet={0}".format(spec['go-jsonnet'].prefix),
+            "--with-jsonnet-lib={0}".format(spec['go-jsonnet'].prefix.lib),
+            "--with-jsonnet-libs=gojsonnet",
+            "--with-jsonnet-include={0}".format(spec['go-jsonnet'].prefix.include),
+            "--boost-mt",
+            "--boost-libs={0}".format(spec['boost'].prefix.lib),
+            "--boost-includes={0}".format(spec['boost'].prefix.include),
+            ]
+        bld = ["./wcb", "build", "--notests", "install"]
+
+        bash = which("bash")
+        bash("-c", ' '.join(cfg))
+        bash("-c", ' '.join(bld))

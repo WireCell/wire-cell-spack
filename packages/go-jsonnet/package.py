@@ -60,13 +60,10 @@ class GoJsonnet(Package):
         go('build', '-o', prefix.bin, './cmd/jsonnet-deps')
         go('build', '-o', 'libgojsonnet.so',
            '-buildmode=c-shared', './c-bindings')
-        # install("jsonnet", prefix.bin)
-        # install("jsonnetfmt", prefix.bin)
-        # install("jsonnet-deps", prefix.bin)
+
         install("libgojsonnet.so", prefix.lib)
         install("libgojsonnet.h", prefix.include)
-        install("libgojsonnet.so", prefix.lib.join("libjsonnet.so"))
-        install("libgojsonnet.h", prefix.include.join("libjsonnet.h"))
+        install("cpp-jsonnet/include/libjsonnet.h", prefix.include)
 
 
     @run_after("install")
