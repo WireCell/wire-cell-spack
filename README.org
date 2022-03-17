@@ -1,7 +1,35 @@
 #+title: Spack packages for Wire-Cell
 
-This repo holds some novel or overrides some existing Spack
-~package.py~'s for building Wire-Cell software including packaging for
-Wire-Cell Toolkit itself.
+This repo holds a Spack ~package.py~ to build ~wire-cell-toolkit~ and a
+few others that have yet to be PR'ed to Spack, proper.   To use:
 
-See also https://github.com/wirecell/wire-cell-spack-containers 
+- [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Install Spack.]]  We need post-0.17.1 ~develop~ branch ca March 2022.
+
+- Clone this git repo and add it as a Spack repo:
+
+#+begin_example
+git clone https://github.com/WireCell/wire-cell-spack.git wct-spack
+spack repo add wct-spack
+#+end_example
+
+- Install the "core" ~wire-cell-toolkit~ support and its externals:
+
+  #+begin_example
+spack install wire-cell-toolkit
+  #+end_example
+
+- Or, in addition, install the optional support by specifying one or
+  more variants which you can discover with:
+
+#+begin_example
+spack info wire-cell-toolkit
+#+end_example
+
+For example:
+
+#+begin_example
+spack install wire-cell-toolkit+root
+#+end_example
+
+See also https://github.com/wirecell/wire-cell-spack-containers for
+how to make and use Docker and Singularity containers.
