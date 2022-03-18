@@ -241,6 +241,37 @@ $ wire-cell --version
 0.18.0-5-g8513660
 #+end_example
 
+** Automate the above
+
+With ~direnv~ and the patterns above assumed, this package provides
+[[./scripts/wct-make-dev]] to lower the bar to making new working areas.
+If it does not suit as is, you are encouraged to hack your own
+version.
+
+#+begin_example
+$ ./scripts/wct-make-dev /path/to/work [<spec>]
+$ ls -a /path/to/work
+.  ..  .direnv  .envrc  local  python  toolkit
+#+end_example
+
+It will guess a new ~wire-cell-toolkit~ if ~<spec>~ is not given and produce:
+
+- ~.direnv/~ direnv's area holding a Python virtual env.
+- ~.envrc~ a direnv config file. 
+- ~local/~ holding the Spack view.
+- ~python/~ holding git clone of ~wire-cell-python~
+- ~toolkit/~ holding git clone of ~wire-cell-toolkit~
+
+At the end the script prints a few lines which can be copy-pasted to
+build and install the latter two.  Eg:
+
+#+begin_example
+cd /path/to/work && direnv allow
+bash -c "$WIRECELL_CONFIG" && bash -c "$WIRECELL_BULID"
+cd python && pip install -e . && cd -
+#+end_example
+
+After initial run, the ~.envrc~ file can be hacked on as needed.
 
 * More info
 
