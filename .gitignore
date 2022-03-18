@@ -8,3 +8,6 @@ wire-cell-build
 toolkit
 waf-tools
 devel
+auto
+latexmk-out
+*.tex

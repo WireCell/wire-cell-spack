@@ -1,35 +1,250 @@
 #+title: Spack packages for Wire-Cell
+#+options: toc:t
 
-This repo holds a Spack ~package.py~ to build ~wire-cell-toolkit~ and a
-few others that have yet to be PR'ed to Spack, proper.   To use:
+This repo holds a Spack ~wire-cell-toolkit/package.py~ and a few
+additional Spack "recipes" to build WCT dependencies not already in
+Spack.
 
-- [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Install Spack.]]  We need post-0.17.1 ~develop~ branch ca March 2022.
 
-- Clone this git repo and add it as a Spack repo:
+
+* Quick start
+
+Here describes how to go from zero to having WCT installed and usable
+in a "stand alone" manner (using the ~wire-cell~ command line program).
+
+** Install Spack
+
+See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs.]]  We need post-0.17.1 ~develop~ branch ca March 2022.
 
 #+begin_example
-git clone https://github.com/WireCell/wire-cell-spack.git wct-spack
-spack repo add wct-spack
+$ git clone -c feature.manyFiles=true https://github.com/spack/spack.git /srv/spack/local
 #+end_example
 
-- Install the "core" ~wire-cell-toolkit~ support and its externals:
+** Set up spack
 
-  #+begin_example
-spack install wire-cell-toolkit
-  #+end_example
-
-- Or, in addition, install the optional support by specifying one or
-  more variants which you can discover with:
+See [[https://spack.readthedocs.io/en/latest/getting_started.html#shell-support][Shell support section of the Spack docs]] but in brief:
 
 #+begin_example
-spack info wire-cell-toolkit
+$ source /srv/spack/local/share/spack/setup-env.sh
+#+end_example
+
+This will define a ~spack~ command that can further modify your current
+environment.
+
+*Alternatively* you may leave your current shell environment intact and
+starting a subshell to hold the changes Spack will make:
+
+#+begin_example
+$ bash --rcfile /srv/spack/local/share/spack/setup-env.sh
+#+end_example
+
+*Alternatively* you may call ~spack~ as a direct command:
+
+#+begin_example
+$ /srv/spack/local/bin/spack
+# or
+$ alias spack /srv/spack/local/bin/spack
+# or
+$ PATH=/srv/spack/local/bin:$PATH
+#+end_example
+
+Any ~spack~ commands which mutate the calling environment will obviously
+not work when ~spack~ is called directly, but the others will.
+
+
+** Add WCT Spack repo
+
+Clone this git repo and add it as a Spack repo:
+
+#+begin_example
+$ git clone https://github.com/WireCell/wire-cell-spack.git wct-spack
+$ spack repo add wct-spack
+#+end_example
+
+It may go anywhere but a suggestion is to put it near where Spack is
+installed.  Given the above choice, it might got at
+~/srv/spack/repos/wct-spack~.
+
+** Install WCT
+
+Install the "core" ~wire-cell-toolkit~ support and its externals:
+
+#+begin_example
+$ spack install wire-cell-toolkit
+#+end_example
+
+Or install "variants" of WCT which have more features.  You can
+discover the variants with:
+
+#+begin_example
+$ spack info wire-cell-toolkit
 #+end_example
 
 For example:
 
 #+begin_example
-spack install wire-cell-toolkit+root
+$ spack install wire-cell-toolkit+root
 #+end_example
 
+** WCT environment
+
+See the next sections for alternatives.  You may use Spack to modify
+your shell environment to run WCT.  If your ~spack~ command was defined
+as a shell function you may run:
+
+#+begin_example
+$ spack load wire-cell-toolkit
+#+end_example
+
+Or, if you use the direct ~spack~ command you may to the equivalent
+with:
+
+#+begin_example
+$ eval $(spack load --sh wire-cell-toolkit)
+#+end_example
+
+In either case you should now be able to run:
+
+#+begin_example
+$ wire-cell --help
+#+end_example
+
+** WCT view
+
+The above does a huge amount of environment modifications in order to
+aggregate WCT and all its dependencies via ~$PATH~, etc.  You may
+instead use the file system to do this aggregation by creating a
+"Spack view".  This reduces the amount of shell environment
+modifications needed.
+
+#+begin_example
+$ spack view add -i myview wire-cell-toolkit
+$ ls myview/
+bin  etc  include  lib  libexec  man  pkg  sbin  share
+#+end_example
+
+You may now add just ~myview/bin~ to ~$PATH~ and etc for other ~PATH~-like
+variables.
+
+#+begin_example
+## only needed if not using direnv
+$ export PATH=$myview/bin:$PATH
+$ export MANPATH=$myview/man:$myview/share/man:$MANPATH
+$ export LD_LIBRARY_PATH=$myview/lib:$LD_LIBRARY_PATH
+$ export LIBRARY_PATH=$myview/lib:$LIBRARY_PATH
+$ export PKG_CONFIG_PATH=$myview/share/pkgconfig:$myview/lib/pkgconfig
+#+end_example
+
+
+** WCT view + ~direnv~
+
+An excellent way to manage the small amount of environment settings
+needed to use a view is with [[https://direnv.net][direnv]].
+
+#+begin_example
+$ echo 'load_prefix myview' > .envrc
+$ direnv allow
+$ wire-cell --help
+#+end_example
+
+
+* Details
+
+
+** More than one ~wire-cell-toolkit~ installed
+
+Spack allows multiple packages of the same name to be installed.
+Commands like ~spack load~ or ~spack view~ require a package to be
+identified uniquely.  One way to do that is to specify the *version*
+and/or set of *variants* for the desired package.  You can discover what
+is available with:
+
+#+begin_example
+$ spack find -v wire-cell-toolkit
+-- linux-debian11-haswell / gcc@10.2.1 --------------------------
+wire-cell-toolkit@0.18.0~cppjsonnet~hdf~root+tbb
+wire-cell-toolkit@0.18.0~cppjsonnet~hdf+root+tbb
+#+end_example
+
+In this example, adding =+root= or =~root= is enough to make the name
+unique.  You may test uniqueness, eg:
+
+#+begin_example
+$ spack find -v wire-cell-toolkit~root
+==> 1 installed package
+-- linux-debian11-haswell / gcc@10.2.1 --------------------------
+wire-cell-toolkit@0.18.0~cppjsonnet~hdf~root+tbb
+#+end_example
+
+If specifying a version and variants are not enough to uniquely
+determine a package then a "slash-hash" may be used.  To discover
+these you may run:
+
+#+begin_example
+$ spack find -vl wire-cell-toolkit
+==> 2 installed packages
+-- linux-debian11-haswell / gcc@10.2.1 --------------------------
+7rxgr7w wire-cell-toolkit@0.18.0~cppjsonnet~hdf~root+tbb
+55c7krd wire-cell-toolkit@0.18.0~cppjsonnet~hdf+root+tbb
+#+end_example
+
+And again to test a match:
+
+#+begin_example
+$ spack find -vl /55c7krd
+==> 1 installed package
+-- linux-debian11-haswell / gcc@10.2.1 --------------------------
+55c7krd wire-cell-toolkit@0.18.0~cppjsonnet~hdf+root+tbb
+#+end_example
+
+** View-based development environment
+
+This section describes how to create a development environment based
+on a Spack view.  The view greatly simplifies how to configure WCT or
+other package build systems to exploit Spack-built packages.
+
+First, set up a view as described above.  It is recommended to also
+use ~direnv~ to set the environment (again, as described above).
+
+In addition, and just for abbreviation in what comes next, we define a
+local environment variable pointing to the view directory:
+
+#+begin_example
+$ export myview=$(pwd)/myview
+#+end_example
+
+Next, get WCT source:
+
+#+begin_example
+$ git clone https://github.com/WireCell/wire-cell-toolkit.git
+$ cd wire-cell-toolkit
+#+end_example
+
+We are now set to configure and build.  The view helps us here but
+some packages do not provide ~pkg-config~ files and so WCT's ~wcb~ builder
+needs to be told some details.
+
+#+begin_example
+$ ./wcb configure \
+   --prefix=$myview \
+   --with-jsonnet=$myview \
+   --boost-mt --boost-libs=$myview/lib --boost-include=$myview/include
+$ ./wcb install --notests
+#+end_example
+
+With the given ~--prefix=$myview~, this installs into the view.  It
+overwrites (the symlinks to) the originally installed WCT files.  Thus
+our development version is immediately available for use.
+
+#+begin_example
+$ wire-cell --version
+0.18.0-5-g8513660
+#+end_example
+
+
+* More info
+
 See also https://github.com/wirecell/wire-cell-spack-containers for
-how to make and use Docker and Singularity containers.
+idea on how to make and use Docker and Singularity containers built
+via ~wire-cell-spack~ methods.
+
