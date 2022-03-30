@@ -40,7 +40,17 @@ class WireCellToolkit(Package):
     depends_on('spdlog @1.9.1:')
     depends_on('fftw @3.3.9: ~mpi')
     depends_on('jsoncpp @1.9.3: cxxstd=17')
-    depends_on('boost @1.77.0: cxxstd=17')
+
+    # In principle, we can form the list of Boost libs to build based
+    # on the list that WCT's waf-tools/wcb.py uses to check for Boost
+    # dependencies.  However, beware that developers building against
+    # a "full" Boost can add dependency on new Boost libs without
+    # noticing that wcb.py does not test for them.  For some details
+    # on this issue, see:
+    # https://github.com/WireCell/wire-cell-spack/issues/4
+    boost_libs = 'date_time exception filesystem graph iostreams math program_options regex system thread'.split()
+    boost_variants = '+'.join(boost_libs)
+    depends_on('boost @1.77.0: cxxstd=17 +'+boost_variants)
 
     # we need one or the other
     depends_on('jsonnet @0.18.0: +python', when='+cppjsonnet')

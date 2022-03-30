@@ -14,11 +14,17 @@ in a "stand alone" manner (using the ~wire-cell~ command line program).
 
 ** Install Spack
 
-See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs.]]  We need post-0.17.1 ~develop~ branch ca March 2022.
+See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs.]]
 
 #+begin_example
 $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git /srv/spack/local
+$ git checkout 58a32b04d90da7d2edc4388e78feb84abe8fb089
 #+end_example
+
+*Important note on Spack version to use*, for now we need some
+ill-defined *post-0.17.1* ~develop~ branch.  Above shows a checkout of the
+commit used to test this.  YMMV if using other commits.  See Issue #5
+for some details and todo item.
 
 ** Set up spack
 
