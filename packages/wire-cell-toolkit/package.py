@@ -15,6 +15,9 @@ class WireCellToolkit(Package):
 
     maintainers = ['brettviren']
 
+    version('0.20.0', sha256='7bef9a3709a2f66a1ade5bc942ec7be3449743016ca03d9ff7bd7c8067cbd2cb')
+    version('0.19.1', sha256='6b7082ce87e5f433a787ef9a7454f6033d359b0a8d854942181db9fcbb0c5e21')
+    version('0.19.0', sha256='8262d313ec8f957b399dfa1bdca268d61110eea946c836fd19440d3764aa43ea')
     version('0.18.0', sha256='9a659d2ac96cff0166c1e78574734981ed1fabe039a2f02376a8b3f04653b6b3')
     version('0.17.1', sha256='4abb1bf16a59815e1702c6c53238c6790ec0872a58f51fd2fc44866419b597e5')
 
@@ -36,10 +39,10 @@ class WireCellToolkit(Package):
     depends_on('pkgconfig', type=('build',)) 
 
     # required
-    depends_on('eigen @3.3.0:')
-    depends_on('spdlog @1.9.1:')
-    depends_on('fftw @3.3.9: ~mpi')
-    depends_on('jsoncpp @1.9.3: cxxstd=17')
+    depends_on('eigen @3.4.0:')
+    depends_on('spdlog @1.9.2:')
+    depends_on('fftw @3.3.10: ~mpi')
+    depends_on('jsoncpp @1.9.4: cxxstd=17')
 
     # In principle, we can form the list of Boost libs to build based
     # on the list that WCT's waf-tools/wcb.py uses to check for Boost
@@ -50,17 +53,17 @@ class WireCellToolkit(Package):
     # https://github.com/WireCell/wire-cell-spack/issues/4
     boost_libs = 'date_time exception filesystem graph iostreams math program_options regex system thread'.split()
     boost_variants = '+'.join(boost_libs)
-    depends_on('boost @1.77.0: cxxstd=17 +'+boost_variants)
+    depends_on('boost @1.78.0: cxxstd=17 +'+boost_variants)
 
     # we need one or the other
     depends_on('jsonnet @0.18.0: +python', when='+cppjsonnet')
     depends_on('go-jsonnet @0.18.0: +python', when='~cppjsonnet')
 
     # optional
-    depends_on('intel-tbb @2021.1.1: cxxstd=17', when='+tbb')
+    depends_on('intel-tbb @2021.3.0: cxxstd=17', when='+tbb')
     # fixme: may need to tell root to use same TBB
-    depends_on('root cxxstd=17', when='+root')
-    depends_on('h5cpp', when='+hdf')
+    depends_on('root @6.26.00 cxxstd=17', when='+root')
+    depends_on('h5cpp ~mpi', when='+hdf')
 
     def install(self, spec, prefix):
         cfg = ["./wcb", "configure", "--prefix={0}".format(prefix)]
