@@ -21,11 +21,21 @@ if [ -f "$tdir/.envrc" ] ; then
 fi
 
 if [ -z "$spec" ] ; then
-    spec=/$( $spack find -l v wire-cell-toolkit|tail -1 | awk '{print $1}' )
+    spec=$( $spack find -l -v wire-cell-toolkit|tail -1 | awk '{print $1}' )
+    if [ "$spec" = "==>" ] ; then
+        echo "Failed to find WCT in spack, try:"
+        echo "  spack install wire-cell-toolkit"
+        echo "See https://github.com/wirecell/wire-cell-spack"
+        exit 1
+    fi
+    spec="/$spec"
+    echo "Found spec: $spec"
 fi
 
 mkdir -p "$tdir"
 cd "$tdir"
+
+$spack view add -i local "$spec"
 
 if [ -d python ] ; then
     echo "wire-cell-python is already cloned"
@@ -38,7 +48,6 @@ else
     git clone git@github.com:wirecell/wire-cell-toolkit.git toolkit
 fi
 
-$spack view add -i local "$spec"
 
 cat <<EOF > .envrc
 
@@ -48,14 +57,18 @@ export WIRECELL_CONFIG="cd \$PWD/toolkit &&
 ./wcb configure \
    --prefix=\$WIRECELL_PREFIX \
    --with-jsonnet=\$WIRECELL_PREFIX \
+   --with-jsonnet-libs=gojsonnet \
+   --with-eigen-include=\$WIRECELL_PREFIX/include/eigen3 \
    --boost-mt --boost-libs=\$WIRECELL_PREFIX/lib --boost-include=\$WIRECELL_PREFIX/include &&
 cd -"
 export WIRECELL_BUILD="cd \$PWD/toolkit && ./wcb install --notests && cd -"
-
+path_add WIRECELL_PATH \$PWD/toolkit/cfg
+path_add WIRECELL_PATH /home/bv/opt/wire-cell-data
 layout python3
 EOF
 
 
+echo "### next steps, run:"
 echo "cd $tdir && direnv allow"
 echo "bash -c \"\$WIRECELL_CONFIG\" && bash -c \"\$WIRECELL_BUILD\""
 echo "cd python && pip install -e . && cd -"
