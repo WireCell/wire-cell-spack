@@ -230,7 +230,7 @@ build and install the latter two.  Eg:
 
 #+begin_example
 cd /path/to/work && direnv allow
-bash -c "$WIRECELL_CONFIG" && bash -c "$WIRECELL_BULID"
+bash -c "$WIRECELL_CONFIG" && bash -c "$WIRECELL_BUILD"
 cd python && pip install -e . && cd -
 #+end_example
 
