@@ -64,6 +64,7 @@ class WireCellToolkit(Package):
     # fixme: may need to tell root to use same TBB
     depends_on('root @6.26.00 cxxstd=17', when='+root')
     depends_on('h5cpp ~mpi', when='+hdf')
+    depends_on('hdf5 ~mpi', when='+hdf')
 
     def install(self, spec, prefix):
         cfg = ["./wcb", "configure", "--prefix={0}".format(prefix)]
