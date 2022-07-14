@@ -1,0 +1,5 @@
+config:
+  install_tree:
+    root: $wcinst
+    projections:
+      all: "${PACKAGE}-${VERSION}-${HASH}"

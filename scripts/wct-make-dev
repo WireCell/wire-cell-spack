@@ -7,9 +7,18 @@ if [ -z "$target" ] ; then
     exit 1
 fi
 
-spack=/srv/spack/local/bin/spack
-if [ ! -x $spack ] ; then
-    echo "No spack found"
+set -x
+
+for maybe in /srv/spack/local/bin/spack $HOME/opt/spack/bin/spack
+do
+    if [ -x "$maybe" ] ; then
+        spack="$maybe"
+        echo "Found spack at $spack"
+        break
+    fi
+done
+if [ -z "$spack" ] ; then
+    echo "No spack found" 1>&2
     exit 1
 fi
 
@@ -35,7 +44,7 @@ fi
 mkdir -p "$tdir"
 cd "$tdir"
 
-$spack view add -i local "$spec"
+$spack view add -i local "$spec" || exit 1
 
 if [ -d python ] ; then
     echo "wire-cell-python is already cloned"

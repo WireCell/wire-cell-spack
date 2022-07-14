@@ -236,6 +236,15 @@ cd python && pip install -e . && cd -
 
 After initial run, the ~.envrc~ file can be hacked on as needed.
 
+** Using a Spack "scope"
+
+To better keep multiple Spack instances you use separate, a Spack
+"scope" may be used.  Some example ones are provided under [[file:./scopes/][scopes/]]
+directory.
+
+- ~debian/~ :: use Debian packages to provide packages otherwise built
+  by Spack.  For use, see example [[scripts/wcspack]].
+
 * More info
 
 See also https://github.com/wirecell/wire-cell-spack-containers for

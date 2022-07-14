@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Example wrapper around spack to limit to a the "debian" scope.  It
+# can be run w/out setting up Spack environment.
+#
+# Some environment variables are defined so they can be used in scope
+# configuration files.
+
+export wcspack=$(dirname $(dirname $(realpath $BASH_SOURCE)))
+export wcscope=$wcspack/scopes/debian
+export wcinst=$HOME/opt/wcspack
+export PKG_CONFIG_PATH=/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig
+$HOME/opt/spack/bin/spack -C $wcscope $@
