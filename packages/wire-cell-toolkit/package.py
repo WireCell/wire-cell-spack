@@ -15,6 +15,7 @@ class WireCellToolkit(Package):
 
     maintainers = ['brettviren']
 
+    version('0.21.0', sha256='85c8eed3fcc1637b1d7c1edc0bfb54f0a37c2b9e3bac4f4a3e72b76de4753dd1')
     version('0.20.0', sha256='7bef9a3709a2f66a1ade5bc942ec7be3449743016ca03d9ff7bd7c8067cbd2cb')
     version('0.19.1', sha256='6b7082ce87e5f433a787ef9a7454f6033d359b0a8d854942181db9fcbb0c5e21')
     version('0.19.0', sha256='8262d313ec8f957b399dfa1bdca268d61110eea946c836fd19440d3764aa43ea')
