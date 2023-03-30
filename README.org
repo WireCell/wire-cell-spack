@@ -5,7 +5,7 @@ This repo holds a Spack ~wire-cell-toolkit/package.py~ and a few
 additional Spack "recipes" to build WCT dependencies not already in
 Spack.
 
-It builds Wire-Cell Toolkit [[https://github.com/WireCell/wire-cell-toolkit/releases/tag/0.20.0][0.20.0]] and requires exactly [[https://github.com/spack/spack/releases/tag/v0.18.0][Spack 0.18.0]].
+It builds Wire-Cell Toolkit [[https://github.com/WireCell/wire-cell-toolkit/releases/tag/0.24.1][0.24.1]] and requires exactly [[https://github.com/spack/spack/releases/tag/v0.19.1][Spack 0.19.1]].
 YMMV for any other mixes of versions.  It may be used to build a
 development environment for newer versions of Wire-Cell Toolkit.
 
@@ -18,7 +18,7 @@ Here is one way to do it.
 #+begin_example
 $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git /srv/spack/local
 $ cd /srv/spack/local
-$ git checkout -b v0.18.0 v0.18.0
+$ git checkout -b v0.19.1 v0.19.1
 #+end_example
 
 See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs]] for details and options.
@@ -55,6 +55,16 @@ For example:
 
 #+begin_example
 $ spack install wire-cell-toolkit+root
+#+end_example
+
+** Other compilers
+
+One can build with a non-default compiler known to spack:
+
+#+begin_example
+$ spack compiler find
+$ spack compiler list
+$ spack install wire-cell-toolkit%clang@14.0.6
 #+end_example
 
 ** WCT environment
@@ -111,6 +121,10 @@ $ wire-cell --help
 
 
 * Details
+
+** Other compilers
+
+When using a non-default compiler one must set ~CC~ and ~CXX~ before configuring ~wire-cell-toolkit~ build with ~wcb~.  
 
 ** More than one ~wire-cell-toolkit~ installed
 

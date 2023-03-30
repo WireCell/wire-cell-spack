@@ -11,10 +11,13 @@ class WireCellToolkit(Package):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://wirecell.github.io/"
-    url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.17.1.tar.gz"
+    url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
 
     maintainers = ['brettviren']
-
+    version("0.24.1", sha256="0467a4dff51abac3661aa99c5f3cc5de1ba1607a7f357631a2fbf7dcdf01c8a9")
+    version("0.24.0", sha256="2a3a62089b40ee1baccdfaf320d3730eed8d301337a616eeb3186097996f3431")
+    version("0.23.0", sha256="53712dd4bfea79900fc86eee44779cdd9644be29354569f2b4368a7841a62b57")
+    version("0.22.0", sha256="d6c7b4f805fc5d4fbdd4ab0d0b72e3e92a96d458fbc3a03fefed96d0b252931b")
     version('0.21.0', sha256='85c8eed3fcc1637b1d7c1edc0bfb54f0a37c2b9e3bac4f4a3e72b76de4753dd1')
     version('0.20.0', sha256='7bef9a3709a2f66a1ade5bc942ec7be3449743016ca03d9ff7bd7c8067cbd2cb')
     version('0.19.1', sha256='6b7082ce87e5f433a787ef9a7454f6033d359b0a8d854942181db9fcbb0c5e21')
@@ -54,14 +57,14 @@ class WireCellToolkit(Package):
     # https://github.com/WireCell/wire-cell-spack/issues/4
     boost_libs = 'date_time exception filesystem graph iostreams math program_options regex system thread'.split()
     boost_variants = '+'.join(boost_libs)
-    depends_on('boost @1.78.0: cxxstd=17 +'+boost_variants)
+    depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
 
     # we need one or the other
-    depends_on('jsonnet @0.18.0: +python', when='+cppjsonnet')
-    depends_on('go-jsonnet @0.18.0: +python', when='~cppjsonnet')
+    depends_on('jsonnet @0.19.1: +python', when='+cppjsonnet')
+    depends_on('go-jsonnet @0.19.1: +python', when='~cppjsonnet')
 
     # optional
-    depends_on('intel-tbb @2021.3.0: cxxstd=17', when='+tbb')
+    depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
     # fixme: may need to tell root to use same TBB
     depends_on('root @6.26.00 cxxstd=17', when='+root')
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')

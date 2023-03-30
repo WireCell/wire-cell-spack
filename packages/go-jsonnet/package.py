@@ -31,6 +31,7 @@ class GoJsonnet(Package):
 
     maintainers = ['brettviren']
 
+    version("0.19.1", sha256="7ff57d4d11d8e7a91114acb4506326226ae4ed1954e90d68aeb88b33c35c5b71")
     version('0.18.0', sha256='369af561550ba8cff5dd7dd08a771805a38d795da3285221012cf3a2933b363e')
     version('0.17.0', sha256='4fd04d0c9e38572ef388d28ea6b1ac151b8a9a5026ff94e3a68bdbc18c4db38a')
 
