@@ -6,24 +6,16 @@
 from spack import *
 
 
-class WireCellToolkit(Package):
-    """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
+class WireCellDependencies(BundlePackage):
+    """Only install WireCell Deps."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://wirecell.github.io/"
-    url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
 
     maintainers = ['brettviren']
-    version("0.24.1", sha256="0467a4dff51abac3661aa99c5f3cc5de1ba1607a7f357631a2fbf7dcdf01c8a9")
-    version("0.24.0", sha256="2a3a62089b40ee1baccdfaf320d3730eed8d301337a616eeb3186097996f3431")
-    version("0.23.0", sha256="53712dd4bfea79900fc86eee44779cdd9644be29354569f2b4368a7841a62b57")
-    version("0.22.0", sha256="d6c7b4f805fc5d4fbdd4ab0d0b72e3e92a96d458fbc3a03fefed96d0b252931b")
-    version('0.21.0', sha256='85c8eed3fcc1637b1d7c1edc0bfb54f0a37c2b9e3bac4f4a3e72b76de4753dd1')
-    version('0.20.0', sha256='7bef9a3709a2f66a1ade5bc942ec7be3449743016ca03d9ff7bd7c8067cbd2cb')
-    version('0.19.1', sha256='6b7082ce87e5f433a787ef9a7454f6033d359b0a8d854942181db9fcbb0c5e21')
-    version('0.19.0', sha256='8262d313ec8f957b399dfa1bdca268d61110eea946c836fd19440d3764aa43ea')
-    version('0.18.0', sha256='9a659d2ac96cff0166c1e78574734981ed1fabe039a2f02376a8b3f04653b6b3')
-    version('0.17.1', sha256='4abb1bf16a59815e1702c6c53238c6790ec0872a58f51fd2fc44866419b597e5')
+
+    # FIXME: Add proper versions here.
+    version('0.0.0')
 
     # optional, default=True
     variant('tbb', default=True,
@@ -71,20 +63,3 @@ class WireCellToolkit(Package):
     depends_on('h5cpp ~mpi', when='+hdf')
     depends_on('hdf5 ~mpi', when='+hdf')
 
-    def install(self, spec, prefix):
-        cfg = ["./wcb", "configure", "--prefix={0}".format(prefix)]
-        # fixme: honor cppjsonnet variant
-        cfg += [
-            "--with-jsonnet={0}".format(spec['go-jsonnet'].prefix),
-            "--with-jsonnet-lib={0}".format(spec['go-jsonnet'].prefix.lib),
-            "--with-jsonnet-libs=gojsonnet",
-            "--with-jsonnet-include={0}".format(spec['go-jsonnet'].prefix.include),
-            "--boost-mt",
-            "--boost-libs={0}".format(spec['boost'].prefix.lib),
-            "--boost-includes={0}".format(spec['boost'].prefix.include),
-            ]
-        bld = ["./wcb", "build", "--notests", "install"]
-
-        bash = which("bash")
-        bash("-c", ' '.join(cfg))
-        bash("-c", ' '.join(bld))
