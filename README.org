@@ -5,7 +5,7 @@ This repo holds a Spack ~wire-cell-toolkit/package.py~ and a few
 additional Spack "recipes" to build WCT dependencies not already in
 Spack.
 
-It builds Wire-Cell Toolkit [[https://github.com/WireCell/wire-cell-toolkit/releases/tag/0.24.1][0.24.1]] and requires exactly [[https://github.com/spack/spack/releases/tag/v0.19.1][Spack 0.19.1]].
+It builds Wire-Cell Toolkit [[https://github.com/WireCell/wire-cell-toolkit/releases/tag/0.24.1][0.24.1]] and requires exactly [[https://github.com/spack/spack/releases/tag/v0.20.1][Spack 0.20.1]].
 YMMV for any other mixes of versions.  It may be used to build a
 development environment for newer versions of Wire-Cell Toolkit.
 
@@ -18,7 +18,7 @@ Here is one way to do it.
 #+begin_example
 $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git /srv/spack/local
 $ cd /srv/spack/local
-$ git checkout -b v0.19.1 v0.19.1
+$ git checkout -b v0.20.1 v0.20.1
 #+end_example
 
 See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs]] for details and options.
@@ -33,33 +33,41 @@ See [[https://spack.readthedocs.io/en/latest/getting_started.html#shell-support]
 
 ** Add WCT Spack repo
 
+This repo can live anywhere.  For example, under ~/srv/spack~ is fine.
+
 #+begin_example
+$ cd /srv/spack
 $ git clone https://github.com/WireCell/wire-cell-spack.git wct-spack
 $ spack repo add wct-spack
 #+end_example
 
 ** Install WCT
 
+Simply run:
+
 #+begin_example
 $ spack install wire-cell-toolkit
 #+end_example
 
-This installs "core" code.  You may wish to install variants with more
-features.  Discover variants with:
+This will install the "core" WCT code and its dependencies.
+Alternatively, you may wish to install a "variant" build that provides
+additional features requiring more dependencies.  Discover what
+variants are available with:
 
 #+begin_example
 $ spack info wire-cell-toolkit
 #+end_example
 
-For example:
+For example one may install support for ROOT and HDF5:
 
 #+begin_example
-$ spack install wire-cell-toolkit+root
+$ spack install wire-cell-toolkit+root+hdf
 #+end_example
 
 ** Other compilers
 
-One can build with a non-default compiler known to spack:
+One can build software with more than one compiler as long as it is
+known to Spack:
 
 #+begin_example
 $ spack compiler find
@@ -67,26 +75,25 @@ $ spack compiler list
 $ spack install wire-cell-toolkit%clang@14.0.6
 #+end_example
 
-** WCT environment
+** WCT shell environment
+
+Spack provides support for "environment modules" that manages the
+users shell environment.  For example, so that ~PATH~ like variables are
+set.  
 
 #+begin_example
 $ spack load wire-cell-toolkit
 $ wire-cell --help
 #+end_example
 
-* Developer options
-
-The above installation can be used for WCT development.  WCT's ~wcb~
-tool can find many dependencies from the environment produced by ~spack
-load~.  However, when things may go wrong the developer will need to
-understand a large environment.  Instead, it is possible to rely on a
-much smaller shell environment and provide a much simpler development
-area.  More details below in [[View-based development environment]].
-
 ** WCT view
 
-A "Spack view" aggregates the package build products via the file
-system so that the far less environment settings are needed.
+Note, developers should read this section but skip the example command
+and see section [[Developer guide]] below.
+
+A "Spack view" provides an alternative to shell environment variables
+for using packages.  This method requires far smaller shell
+environment mangling by providing a single area akin to ~/usr/local/~.
 
 #+begin_example
 $ spack view add -i myview wire-cell-toolkit
@@ -94,8 +101,8 @@ $ ls myview/
 bin  etc  include  lib  libexec  man  pkg  sbin  share
 #+end_example
 
-You may now add the single entry ~myview/bin~ to ~$PATH~ and etc for other
-~PATH~-like variables.
+To use the software, you may now add the single entry
+~$(pwd)/myview/bin~ to ~$PATH~ and etc for other ~PATH~-like variables.
 
 #+begin_example
 ## only needed if not using direnv
@@ -103,28 +110,177 @@ $ myview=$(pwd)/myview
 $ export PATH=$myview/bin:$PATH
 $ export MANPATH=$myview/man:$myview/share/man:$MANPATH
 $ export LD_LIBRARY_PATH=$myview/lib:$LD_LIBRARY_PATH
-$ export LIBRARY_PATH=$myview/lib:$LIBRARY_PATH
-$ export PKG_CONFIG_PATH=$myview/share/pkgconfig:$myview/lib/pkgconfig
 #+end_example
 
-** A Spack view + ~direnv~
 
-Though the above is fairly minimal, an even better way to manage these
-environment settings with less configuration is to use [[https://direnv.net][direnv]].  After
-making ~myview~ as above and without explicitly setting any variables:
+* Developer guide
+
+This section describes how to leverage Spack views to create simple
+and tidy developer environments.  Follow above up to an including the
+~spack install~ step.
+
+** Make a Spack view for development
+
+We will make a Spack view slightly differently than a user would.  We
+will explicitly exclude WCT itself as we will next build WCT
+ourselves.
 
 #+begin_example
-$ echo 'load_prefix myview' > .envrc
-$ direnv allow
-$ wire-cell --help
+$ cd /path/to/my/dev/area
+$ spack view -e wire-cell-toolkit add -i local wire-cell-toolkit
 #+end_example
 
+This populates the directory named ~local/~.
+
+** Manage shell environment with ~direnv~
+
+Typically we developers want to form a strong binding between one of
+our development areas on disk and the shell environment that is
+required to build and run the software.  This can be managed by hand
+but that is tedious and error prone.  Use of ~direnv~ overcomes these
+problems and is well worth the one-time effort to install.
+
+To configure ~direnv~ to use the Spack view, first set up ~direnv~
+[[https://direnv.net/docs/hook.html][for your particular shell]] and then perform this one time setup:
+
+#+begin_example
+$ cd /path/to/my/dev/area
+$ echo 'load_prefix local' > .envrc
+$ direnv allow
+#+end_example
+
+This last command will need repeating if/when you edit the ~.envrc~
+file.  With your shell set up to use ~direnv~ it will automatically warn
+you when it detects a change.
+
+** Installing ~wire-cell-python~
+
+The ~wire-cell-python~ package provides various useful, ancillary
+facilities but is not (yet) officially a dependency of WCT.  However,
+developers are strongly recommended to install it as it may be used by
+some of the tests provided by ~wire-cell-toolkit~.
+
+After the above ~direnv~ set up, check what Python we have:
+
+#+begin_example
+$ which python
+$ python --version
+#+end_example
+
+This should show a modern version of Python provided under the Spack
+*view* directory ~local/~.  In general, do not use the system Python.
+
+#+begin_example
+$ cd /path/to/my/dev/area
+$ git clone https://github.com/WireCell/wire-cell-python.git python
+$ cd python/
+$ pip install -e .
+#+end_example
+
+Note, ~wire-cell-python~ packaging is still a work in progress and the
+above will only install core dependencies.  Depending on the command
+line programs and Python modules to be used, the developer may need to
+install more Python dependencies via ~pip~.  This can be done using one
+or more of the requirements files.  For example:
+
+#+begin_example
+$ pip install -r requirements/base.txt
+#+end_example
+
+Future improvements in the ~wire-cell-python~ Python packaging will make
+this unnecessary.
+
+** View-based development environment
+
+Finally, the developer can get, build and run WCT.  Start by getting a
+copy of the source:
+
+#+begin_example
+$ cd /path/to/my/dev/area
+$ git clone https://github.com/WireCell/wire-cell-toolkit.git toolkit
+$ cd toolkit
+#+end_example
+
+We are now set to configure and build.  The Spack *view* and ~direnv~
+helps us here ~wcb~ will still need help to find some dependencies 
+by giving it ~--with-*~ command line options:
+
+#+begin_example
+$ export myview=/path/to/my/dev/area/local # just for brevity here
+$ ./wcb configure \
+   --prefix=$myview \
+   --with-jsonnet=$myview \
+   --with-jsonnet-libs=$myview/lib/libgojsonnet.so \
+   --boost-mt --boost-libs=$myview/lib --boost-include=$myview/include
+$ ./wcb install
+$ ./wcb --tests  # optional, run many tests
+#+end_example
+
+Giving ~--prefix=$myview~ to ~wcb~ will cause WCT to be installed right
+into the Spack *view* directory.  Since ~direnv~ has minimally set up our
+environment we (almost) ready for full usage:
+
+#+begin_example
+$ wire-cell --version
+0.18.0-5-g8513660
+#+end_example
+
+WCT has essentially only one environment variable that it cares about.
+The ~WIRECELL_PATH~ is checked when loading configuration files.  It can
+be useful to add this to the ~direnv~ configuration file ~.envrc~.
+
+#+begin_example
+$ cd /path/to/my/dev/area
+$ cat << EOF >> .envrc
+path_add WIRECELL_PATH $PWD/toolkit/cfg
+path_add WIRECELL_PATH $HOME/opt/wire-cell-data
+EOF
+#+end_example
+
+The first line will add the ~cfg/~ directory that comes with the source.
+The second will add the location where the WCT data repo may have been
+cloned.  Adjust it to suit your location.
+
+
+** Automate creation of development areas
+
+Creating the patterns described above can be automated using the
+provided [[./scripts/wct-make-dev]] script.  This script is particularly
+useful for developer that frequently create new WCT development areas.
+
+#+begin_example
+$ ./scripts/wct-make-dev /path/to/work [<spec>]
+$ ls -a /path/to/work
+.  ..  .direnv  .envrc  local  python  toolkit
+#+end_example
+
+The script will guess the newest ~wire-cell-dependencies~ available if
+~<spec>~ is not given and it produces:
+
+- ~.direnv/~ direnv's area holding a Python virtual env.
+- ~.envrc~ a direnv config file. 
+- ~local/~ holding the Spack view.
+- ~python/~ holding git clone of ~wire-cell-python~
+- ~toolkit/~ holding git clone of ~wire-cell-toolkit~
+
+At the end the script prints a few lines which can be copy-pasted to
+build and install the latter two.  Eg:
+
+#+begin_example
+cd /path/to/work && direnv allow
+cd python && pip install -e . && cd -
+bash -c "$WIRECELL_CONFIG" && bash -c "$WIRECELL_BUILD"
+#+end_example
+
+The developer is free to subsequently modify the generated ~.envrc~ file
+as desired.  
 
 * Details
 
 ** Other compilers
 
-When using a non-default compiler one must set ~CC~ and ~CXX~ before configuring ~wire-cell-toolkit~ build with ~wcb~.  
+When using a non-default compiler one must set ~CC~ and ~CXX~ before
+configuring ~wire-cell-toolkit~ build with ~wcb~.
 
 ** More than one ~wire-cell-toolkit~ installed
 
@@ -174,81 +330,6 @@ $ spack find -vl /55c7krd
 55c7krd wire-cell-toolkit@0.18.0~cppjsonnet~hdf+root+tbb
 #+end_example
 
-** View-based development environment
-
-This section describes how to create a development environment based
-on a Spack view.  The view greatly simplifies how to configure WCT or
-other package build systems to exploit Spack-built packages.
-
-First, set up a view as described above.  It is recommended to also
-use ~direnv~ to set the environment (again, as described above).
-
-In addition, and just for abbreviation in what comes next, we define a
-local environment variable pointing to the view directory:
-
-#+begin_example
-$ export myview=$(pwd)/myview
-#+end_example
-
-Next, get WCT source:
-
-#+begin_example
-$ git clone https://github.com/WireCell/wire-cell-toolkit.git
-$ cd wire-cell-toolkit
-#+end_example
-
-We are now set to configure and build.  The view helps us here but
-some packages do not provide ~pkg-config~ files and so WCT's ~wcb~ builder
-needs to be told some details.
-
-#+begin_example
-$ ./wcb configure \
-   --prefix=$myview \
-   --with-jsonnet=$myview \
-   --boost-mt --boost-libs=$myview/lib --boost-include=$myview/include
-$ ./wcb install --notests
-#+end_example
-
-With the given ~--prefix=$myview~, this installs into the view.  It
-overwrites (the symlinks to) the originally installed WCT files.  Thus
-our development version is immediately available for use.
-
-#+begin_example
-$ wire-cell --version
-0.18.0-5-g8513660
-#+end_example
-
-** Automate the above
-
-With ~direnv~ and the patterns above assumed, this package provides
-[[./scripts/wct-make-dev]] to lower the bar to making new working areas.
-If it does not suit as is, you are encouraged to hack your own
-version.
-
-#+begin_example
-$ ./scripts/wct-make-dev /path/to/work [<spec>]
-$ ls -a /path/to/work
-.  ..  .direnv  .envrc  local  python  toolkit
-#+end_example
-
-It will guess a new ~wire-cell-toolkit~ if ~<spec>~ is not given and produce:
-
-- ~.direnv/~ direnv's area holding a Python virtual env.
-- ~.envrc~ a direnv config file. 
-- ~local/~ holding the Spack view.
-- ~python/~ holding git clone of ~wire-cell-python~
-- ~toolkit/~ holding git clone of ~wire-cell-toolkit~
-
-At the end the script prints a few lines which can be copy-pasted to
-build and install the latter two.  Eg:
-
-#+begin_example
-cd /path/to/work && direnv allow
-bash -c "$WIRECELL_CONFIG" && bash -c "$WIRECELL_BUILD"
-cd python && pip install -e . && cd -
-#+end_example
-
-After initial run, the ~.envrc~ file can be hacked on as needed.
 
 ** Using a Spack "scope"
 
@@ -258,6 +339,7 @@ directory.
 
 - ~debian/~ :: use Debian packages to provide packages otherwise built
   by Spack.  For use, see example [[scripts/wcspack]].
+
 
 * More info
 

@@ -1,13 +1,21 @@
 #!/bin/bash
+
+# The view directory to make
 target="$1" ; shift
-spec="$1"
+
+# the exact spec for the seed, needed if multiple are installed.
+spec="$1" ; shift
+
+# the package to spack-install and the (excluded) seed for the spack
+# view
+seed="${1:-wire-cell-toolkit}" ; shift
 
 if [ -z "$target" ] ; then
     echo "usage: wct-project.sh /path/to/target [<spec>]"
     exit 1
 fi
 
-set -x
+# set -x
 
 for maybe in /srv/spack/local/bin/spack $HOME/opt/spack/bin/spack
 do
@@ -30,21 +38,23 @@ if [ -f "$tdir/.envrc" ] ; then
 fi
 
 if [ -z "$spec" ] ; then
-    spec=$( $spack find -l -v wire-cell-toolkit|tail -1 | awk '{print $1}' )
+    spec="$( "$spack" find -l -v "$seed" | tail -1 | awk '{print $1}' )"
     if [ "$spec" = "==>" ] ; then
-        echo "Failed to find WCT in spack, try:"
-        echo "  spack install wire-cell-toolkit"
+        echo "Failed to find $seed in spack, try:"
+        echo "  spack install $seed"
         echo "See https://github.com/wirecell/wire-cell-spack"
         exit 1
     fi
     spec="/$spec"
-    echo "Found spec: $spec"
+    echo "Found spec: $spec for $seed"
 fi
 
 mkdir -p "$tdir"
-cd "$tdir"
+cd "$tdir" || exit 1
 
-$spack view add -i local "$spec" || exit 1
+# We exclude wire-cell-toolkit itself since we will install that by
+# hand into the view.
+"$spack" view add -e "$seed" -i local "$spec" || exit 1
 
 if [ -d python ] ; then
     echo "wire-cell-python is already cloned"
@@ -72,12 +82,38 @@ export WIRECELL_CONFIG="cd \$PWD/toolkit &&
 cd -"
 export WIRECELL_BUILD="cd \$PWD/toolkit && ./wcb install --notests && cd -"
 path_add WIRECELL_PATH \$PWD/toolkit/cfg
-path_add WIRECELL_PATH /home/bv/opt/wire-cell-data
+path_add WIRECELL_PATH \$HOME/opt/wire-cell-data
 layout python3
 EOF
 
 
-echo "### next steps, run:"
-echo "cd $tdir && direnv allow"
-echo "bash -c \"\$WIRECELL_CONFIG\" && bash -c \"\$WIRECELL_BUILD\""
-echo "cd python && pip install -e . && cd -"
+cat <<EOF
+
+### Next steps:
+
+# 1. Check and customize the .envrc file.
+
+cat $tdir/.envrc
+
+# 2. Change to the working area and allow direnv (one time)
+
+cd $tdir && direnv allow
+
+# 3. Install wire-cell-python
+
+cd python/ && pip install -e . && cd -
+
+# 4. Pick desired WCT branch, or simply keep with the main branch
+
+cd toolkit/
+git checkout -b v0.24.1 v0.24.1
+
+# 5. Configure and execute the build.
+# The .envrc file provides these commands as shell variables.
+
+bash -c "\$WIRECELL_CONFIG"
+bash -c "\$WIRECELL_BUILD"
+
+EOF
+
+

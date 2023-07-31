@@ -66,7 +66,7 @@ class WireCellToolkit(Package):
     # optional
     depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
     # fixme: may need to tell root to use same TBB
-    depends_on('root @6.26.00 cxxstd=17', when='+root')
+    depends_on('root @6.28.04 cxxstd=17', when='+root')
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
     depends_on('h5cpp ~mpi', when='+hdf')
     depends_on('hdf5 ~mpi', when='+hdf')
