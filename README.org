@@ -225,21 +225,23 @@ $ wire-cell --version
 0.18.0-5-g8513660
 #+end_example
 
-WCT has essentially only one environment variable that it cares about.
-The ~WIRECELL_PATH~ is checked when loading configuration files.  It can
-be useful to add this to the ~direnv~ configuration file ~.envrc~.
+The ~.envrc~ file is ideal for capturing the few shell environment
+variable settings that are needed for developers:
 
 #+begin_example
 $ cd /path/to/my/dev/area
 $ cat << EOF >> .envrc
+
+# Locate configuration files:
 path_add WIRECELL_PATH $PWD/toolkit/cfg
 path_add WIRECELL_PATH $HOME/opt/wire-cell-data
+
+# Locate BATS for manual running
+export BATS_LIB_PATH=$PWD/toolkit/test
+PATH_add $PWD/toolkit/test/bats/bin
+
 EOF
 #+end_example
-
-The first line will add the ~cfg/~ directory that comes with the source.
-The second will add the location where the WCT data repo may have been
-cloned.  Adjust it to suit your location.
 
 
 ** Automate creation of development areas
