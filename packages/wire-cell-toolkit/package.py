@@ -14,6 +14,9 @@ class WireCellToolkit(Package):
     url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
 
     maintainers = ['brettviren']
+    version("0.25.2", sha256="aac849da29092d3397f0130f45c499703496188ad74bd347a3bd154fe23f245d")
+    version("0.25.1", sha256="c236758a70fd459824f2f769b1e4e146e8f75965833a5aa8a81f0cf08044f9d6")
+    version("0.24.2", sha256="ee8fe70f8ead7b7456bbcd791d8bf1a1cf22c6674df503fb9f93c1d33bfd2a1a")
     version("0.24.1", sha256="0467a4dff51abac3661aa99c5f3cc5de1ba1607a7f357631a2fbf7dcdf01c8a9")
     version("0.24.0", sha256="2a3a62089b40ee1baccdfaf320d3730eed8d301337a616eeb3186097996f3431")
     version("0.23.0", sha256="53712dd4bfea79900fc86eee44779cdd9644be29354569f2b4368a7841a62b57")
@@ -66,7 +69,7 @@ class WireCellToolkit(Package):
     # optional
     depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
     # fixme: may need to tell root to use same TBB
-    depends_on('root @6.26.00 cxxstd=17', when='+root')
+    depends_on('root @6.28.04 cxxstd=17', when='+root')
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
     depends_on('h5cpp ~mpi', when='+hdf')
     depends_on('hdf5 ~mpi', when='+hdf')
