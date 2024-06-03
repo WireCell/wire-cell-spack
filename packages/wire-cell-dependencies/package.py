@@ -52,6 +52,8 @@ class WireCellDependencies(BundlePackage):
 
     # Required
 
+    depends_on('wire-cell-data')
+
     depends_on('eigen @3.4.0:')
 
     depends_on('spdlog @1.9.2:')

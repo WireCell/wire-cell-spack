@@ -70,6 +70,8 @@ class WireCellToolkit(Package):
 
     # Required
 
+    depends_on('wire-cell-data')
+
     depends_on('eigen @3.4.0:')
 
     depends_on('spdlog @1.9.2:')
@@ -180,3 +182,7 @@ class WireCellToolkit(Package):
         python(*cfg)
         python(*bld)
         python(*ins)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("WIRECELL_PATH", self.prefix.share.wirecell);
+
