@@ -1,76 +1,174 @@
 #!/bin/bash
 
-# The view directory to make
-target="$1" ; shift
+target=""
+spec=""
+tag=""
+spack=""
+data=""
 
-# the exact spec for the seed, needed if multiple are installed.
-spec="$1" ; shift
+usage () {
+    cat <<EOF
+usage:
 
-# the package to spack-install and the (excluded) seed for the spack
-# view
-seed="${1:-wire-cell-toolkit}" ; shift
+  wct-make-dev [options] [/path/to/area]
+
+  Make a new wire-cell-toolkit and wire-cell-python development area.
+
+  This populates the current working directory or /path/to/area if given with a
+  trio of sub directries:
+
+  <target>/local/    - a Spack view
+  <target>/toolkit/  - wire-cell-toolkit source area
+  <target>/python/   - wire-cell-python source area
+
+  In addition a direnv file <target>/.envrc is created.
+
+  Options:
+
+  -s|--spec <spack-spec>
+
+      Specify a Spack spec as a string like /urqwjcm.  If not specified, and
+      attempt will be made to auto detect.  To find an available <spec>:
+
+          spack find -vl wire-cell-toolkit
+
+  -t|--tag <tag>
+
+      Check out given tag or branch of wire-cell-toolkit instead of master.
+
+
+  -S|--spack /path/to/spack
+
+      Specify the spack executable
+
+  -d|--data /path/to/wire-cell-data
+
+      Specify the directory holding contents of wire-cell-data repo.  If none is
+      found, an attempt to clone it is made.
+
+  /path/to/area
+
+      Make and install to given directory.  If not given but -t <tag> is given
+      then a directory of the same name in the current working directory is
+      used.  If neither is given, the current working directory is used.  The
+      target directory must be free of the trio of subdirectories and the .envrc
+      file.
+
+EOF
+    exit 1
+}
+    
+
+while [[ $# -gt 0 ]] ; do
+    case "$1" in
+        -h|--help|help) usage ;;
+        -s|--spec) spec="$2" ; shift 2;;
+        -t|--tag) tag="$2" ; shift 2;;
+        -S|--spack) spack="$2"; shift 2;;
+        -d|--data) data="$2"; shift 2;;
+        *) target="$1"; shift;;
+    esac
+done
 
 if [ -z "$target" ] ; then
-    echo "usage: wct-project.sh /path/to/target [<spec>]"
-    exit 1
-fi
-
-# set -x
-
-for maybe in /srv/spack/local/bin/spack $HOME/opt/spack/bin/spack
-do
-    if [ -x "$maybe" ] ; then
-        spack="$maybe"
-        echo "Found spack at $spack"
-        break
+    target="$(pwd)"
+    if [ -n "$tag" ] ; then
+        target="$target/$tag"
     fi
-done
-if [ -z "$spack" ] ; then
-    echo "No spack found" 1>&2
-    exit 1
 fi
 
 tdir="$(realpath "$target")"
+for maybe in local toolkit python
+do
+    if [ -d "$tdir/$maybe" ] ; then
+        echo "$tdir/$maybe exists"
+        usage
+    fi
+done
+for maybe in .envrc
+do
+    if [ -f "$tdir/$maybe" ] ; then
+        echo "$tdir/$maybe exists"
+        usage
+    fi
+done
 
-if [ -f "$tdir/.envrc" ] ; then
-    echo "Project area exits: $tdir"
-    exit 1
+for maybe in "$spack" spack /srv/spack/local/bin/spack
+do
+    maybe="$(which "$maybe")"
+    if [ -z "$maybe" ] ; then continue ; fi
+    spack="$maybe"
+    break;
+done
+if [ ! -x "$spack" ] ; then
+    echo "No spack found"
+    usage
+fi
+
+for maybe in "$data" $HOME/opt/wire-cell-data /srv/wire-cell-data
+do
+    if [ -z "$maybe" ] ; then
+        continue;
+    fi
+    maybe="$(realpath "$maybe")"
+    if [ -f "$maybe/pdsp-wires.json.bz2" ] ; then
+        ddir="$maybe"
+        break
+    fi
+done
+if [ -z "$ddir" ] ; then
+    ddir="$tdir/data"
+fi
+
+if [ ! -d "$ddir" ] ; then
+    mkdir -p "$(dirname "$ddir")"
+    git clone "git@github.com:wirecell/wire-cell-data.git" "$ddir"
 fi
 
 if [ -z "$spec" ] ; then
-    spec="$( "$spack" find -l -v "$seed" | tail -1 | awk '{print $1}' )"
+    spec=$( $spack find -l -v wire-cell-toolkit|tail -1 | awk '{print $1}' )
     if [ "$spec" = "==>" ] ; then
-        echo "Failed to find $seed in spack, try:"
-        echo "  spack install $seed"
+        echo "Failed to find WCT in spack, try:"
+        echo "  spack install wire-cell-toolkit"
         echo "See https://github.com/wirecell/wire-cell-spack"
-        exit 1
+        usage
     fi
     spec="/$spec"
-    echo "Found spec: $spec for $seed"
+    echo "Found spec: $spec"
 fi
 
 mkdir -p "$tdir"
 cd "$tdir" || exit 1
 
-# We exclude wire-cell-toolkit itself since we will install that by
-# hand into the view.
-"$spack" view add -e "$seed" -i local "$spec" || exit 1
+"$spack" view add -i local "$spec"
+
+# We do this to get around a little awkwardness.  We want a view with all
+# dependencies for WCT but we do not want WCT build products themselves as they
+# can confuse when we subsequently build different products in our development
+# area.  Until a better solution, simplest thing is to simply remove the WCT
+# bits that spack placed in the view.
+rm -rf local/include/WireCell* local/lib/libWireCell* \
+   local/bin/wcsonnet local/bin/wire-cell local/bin/wcwires
 
 if [ -d python ] ; then
     echo "wire-cell-python is already cloned"
 else
     git clone git@github.com:wirecell/wire-cell-python.git python
 fi
+if [ -n "$tag" ] ; then
+    gitextra="--branch $tag"
+fi
 if [ -d toolkit ] ; then
     echo "wire-cell-toolkit is already cloned"
 else
-    git clone git@github.com:wirecell/wire-cell-toolkit.git toolkit
+    git clone $gitextra git@github.com:wirecell/wire-cell-toolkit.git toolkit
 fi
 
 
 cat <<EOF > .envrc
 
 load_prefix local
+PKG_CONFIG_PATH="\$PKG_CONFIG_PATH:\$PWD/local/share/pkgconfig"
 export WIRECELL_PREFIX=\$PWD/local
 export WIRECELL_CONFIG="cd \$PWD/toolkit && 
 ./wcb configure \
@@ -82,38 +180,21 @@ export WIRECELL_CONFIG="cd \$PWD/toolkit &&
 cd -"
 export WIRECELL_BUILD="cd \$PWD/toolkit && ./wcb install --notests && cd -"
 path_add WIRECELL_PATH \$PWD/toolkit/cfg
-path_add WIRECELL_PATH \$HOME/opt/wire-cell-data
+path_add WIRECELL_PATH $ddir
 layout python3
-EOF
+export BATS_LIB_PATH=\$PWD/toolkit/test
+PATH_add \$PWD/toolkit/test/bats/bin
 
-
-cat <<EOF
-
-### Next steps:
-
-# 1. Check and customize the .envrc file.
-
-cat $tdir/.envrc
-
-# 2. Change to the working area and allow direnv (one time)
-
-cd $tdir && direnv allow
-
-# 3. Install wire-cell-python
-
-cd python/ && pip install -e . && cd -
-
-# 4. Pick desired WCT branch, or simply keep with the main branch
-
-cd toolkit/
-git checkout -b v0.24.1 v0.24.1
-
-# 5. Configure and execute the build.
-# The .envrc file provides these commands as shell variables.
-
-bash -c "\$WIRECELL_CONFIG"
-bash -c "\$WIRECELL_BUILD"
+# to avoid having to "waf install" in order to find plugins:
+path_add LD_LIBRARY_PATH $PWD/toolkit/build/{apps,aux,cuda,gen,iface,img,pgraph,sig,sigproc,sio,tbb,util}
+# but note: some tests will fail without a "waf install"..
 
 EOF
 
 
+echo "### you now run ###"
+echo
+echo "cd $tdir && direnv allow"
+echo "cd python && pip install -e . && cd -"
+echo "bash -c \"\$WIRECELL_CONFIG\" && bash -c \"\$WIRECELL_BUILD\""
+echo
