@@ -18,7 +18,9 @@ class WireCellData(Package):
     version("0.1.0", sha256="cab5d4f4cb39c15bebea361fd0b933e964846207fbac85bb59ea6fdac561fdce")
 
     def install(self, spec, prefix):
-        install("*", prefix)
+        mkdirp(self.prefix.share.wirecell)
+        install("*", prefix.share.wirecell)
+        
 
     def setup_run_environment(self, env):
-        env.prepend_path("WIRECELL_PATH", self.prefix);
+        env.prepend_path("WIRECELL_PATH", self.prefix.share.wirecell);

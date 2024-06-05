@@ -118,9 +118,12 @@ class WireCellToolkit(Package):
     # Optional:
 
     # ROOT is needed for wire-cell-toolkit/root
-    depends_on('root @6.28.04: cxxstd=17', when='+root')
+    # Turn off opengl as it brings in an entire copy of llvm (in addition to llvm internal to root) and one which breaks spack environments based on GCC builds.
+    depends_on('root @6.28.04: ~opengl cxxstd=17', when='+root')
+
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
-    depends_on('h5cpp ~mpi', when='+hdf')
+
+    depends_on('h5cpp ~mpi', when='+hdf') # this will go away sometime soon.
 
     # glpk is needed for wire-cell-toolkit/patrec
     depends_on('glpk', when='+glpk')  
