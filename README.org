@@ -2,21 +2,17 @@
 #+LATEX_HEADER: \usepackage[margin=1in]{geometry}
 #+options: toc:t
 
-This repo provides Spack packaging for building the Wire-Cell toolkit (~wire-cell-toolkit/package.py~) and a few additional Spack packaging to build WCT dependencies not already in Spack.  It may be used to build development and production runtime environments.
+This repo provides Spack packaging for building the Wire-Cell toolkit (WCT) and prototype (WCP) software and a few additional Spack packaging to build WCT dependencies not already in Spack.  It may be used to build development and production runtime environments.
+
+See [[https://github.com/brettviren/wcwc][wcwc]] for how this packaging is used as part of software ecosystem in a workstation cluster context.
 
 Other Spack packaging of the Wire-Cell Toolkit exists.  Of note is the one that exists as part of the [[https://github.com/FNALssi/fnal_art/tree/develop/packages/wirecell][FNALssi Spack suite]] used to build the software ecosystem found in FNAL's CVMFS space.
 
 * Versions
 
-The version name of a release of this package is based on the version name of the most recent release of ~wire-cell-toolkit~ that the release of ~wire-cell-spack~ builds.  A forth digit starting at ~.0~ is appended to the WCT version name and is incremented to indicate new releases of this package that do not update the latest version of WCT itself.  
+The current version of this package can build *WCT 0.28.0*.  If a newer version of WCT has been released, feel free to file a GitHub Issue.  
 
-Versions relevant to this package are currently:
-
-- Spack 0.22.0
-- Wire-Cell toolkit 0.28.0
-
-Generally, a release of ~wire-cell-spack~ can build past released versions of ~wire-cell-toolkit~.
-Versions strings used in the examples below may differ.
+The current version of this package is tested with *Spack 0.22.1*.  Other versions of Spack may (or may not) work.
 
 
 * Quick start
@@ -26,14 +22,14 @@ Here is one way to do it.
 ** Install Spack
 
 #+begin_example
-$ git clone -c feature.manyFiles=true https://github.com/spack/spack.git /srv/spack/local
-$ cd /srv/spack/local
-$ git checkout -b v0.22.0 v0.22.0
+$ git clone \
+  -c feature.manyFiles=true --depth 1 --branch v0.22.1 \
+  https://github.com/spack/spack.git /srv/spack/local
 #+end_example
 
 See [[https://spack.readthedocs.io/en/latest/getting_started.html#installation][Installation section of Spack docs]] for details and options.
 
-** Set up spack
+** Activate Spack shell environment
 
 #+begin_example
 $ bash --rcfile /srv/spack/local/share/spack/setup-env.sh
@@ -46,22 +42,24 @@ See [[https://spack.readthedocs.io/en/latest/getting_started.html#shell-support]
 Clone this repo somewhere and register it with Spack.
 
 #+begin_example
-$ mkdir -p /srv/spack/repos
-$ cd /srv/spack/repos
-$ git clone https://github.com/WireCell/wire-cell-spack.git wct-spack
-$ spack repo add wct-spack
+$ git clone https://github.com/WireCell/wire-cell-spack.git /srv/spack/repos/wct-spack
+$ spack repo add /srv/spack/repos/wct-spack
 #+end_example
 
-** Install WCT
+The Spack repo name is ~wirecell~ as set by [[file:repo.yaml]].
 
-Simply run:
+** Install WCT
 
 #+begin_example
 $ spack install wire-cell-toolkit
 #+end_example
 
-This will install the "core" WCT code and its dependencies.
 
+** Install WCP
+
+#+begin_example
+$ spack install wire-cell-prototype
+#+end_example
 
 * Build options
 
@@ -81,8 +79,7 @@ $ spack install wire-cell-toolkit+root+hdf
 
 ** Compilers
 
-One can build software with more than one compiler as long as it is
-known to Spack:
+One can build software with more than one compiler as long as it is known to Spack:
 
 #+begin_example
 $ spack compiler find
@@ -169,9 +166,7 @@ use ~direnv~ it will automatically warn you when it detects a change.
 
 ** Installing ~wire-cell-python~
 
-The ~wire-cell-python~ package provides various useful, ancillary facilities but is not (yet)
-officially a dependency of WCT.  However, developers are strongly recommended to install it as it
-is used by some of the tests provided by ~wire-cell-toolkit~.
+The ~wire-cell-python~ package provides various useful, ancillary facilities but is not (yet) officially a dependency of WCT.  However, developers are strongly recommended to install it as it is used by some of the tests provided by ~wire-cell-toolkit~.
 
 After the above ~direnv~ set up, check what Python we have:
 
@@ -368,4 +363,5 @@ $ spack install wire-cell-toolkit+root+hdf+tbb
 ** Containers
 
 See [[https://github.com/wirecell/wire-cell-spack-containers][wire-cell-spack-containers]] for ideas on how to make and use Docker and Singularity (now Apptainer) containers built via ~wire-cell-spack~ methods.
+
 
