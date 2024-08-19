@@ -5,7 +5,7 @@
 
 from spack import *
 
-class WireCellToolkit(Package):
+class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -63,6 +63,12 @@ class WireCellToolkit(Package):
             description='Add support for ROOT')    
     variant('glpk', default=False,    
             description='Add support for GLPK')
+    variant('torch', default=False,
+            description='Add support for libtorch')
+    variant('cuda', default=False,
+            description='Add support for CUDA')
+    variant('emacs', default=False,
+            description='Add support for Emacs for documentation building')
 
     # just for build time (for waf/wcb)
     depends_on('python', type=('build',)) 
@@ -109,6 +115,20 @@ class WireCellToolkit(Package):
     depends_on('jsonnet @0.19.1: +python', when='+cppjsonnet')
     depends_on('go-jsonnet @0.19.1: +python', when='~cppjsonnet')
 
+    # used to build documentation.
+    depends_on('emacs', when='+emacs')
+
+    depends_on('py-torch~cuda', when='+torch ~cuda')
+    # Apparently must exhaustively forward all compute capability versions.
+    # This follows how the ams package does things.
+    with when("+cuda"):
+        depends_on('cuda')
+        with when("+torch"):
+            depends_on("py-torch+cuda")
+            for cc in CudaPackage.cuda_arch_values:
+                depends_on(f"py-torch +cuda cuda_arch={cc}",
+                           when=f"cuda_arch={cc}")
+
 
     # Suggested:
 
@@ -118,7 +138,8 @@ class WireCellToolkit(Package):
     # Optional:
 
     # ROOT is needed for wire-cell-toolkit/root
-    # Turn off opengl as it brings in an entire copy of llvm (in addition to llvm internal to root) and one which breaks spack environments based on GCC builds.
+    # Turn off opengl as it brings in an entire copy of llvm (in addition to
+    # llvm internal to root) and one which breaks spack environments based on GCC builds.
     depends_on('root @6.28.04: ~opengl cxxstd=17', when='+root')
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
@@ -172,6 +193,21 @@ class WireCellToolkit(Package):
         cfg += [
             "--with-cuda=no"
         ]
+
+        # if spec.satisfies('+emacs'):
+        #     cfg.append( "--with-emacs=" + spec['emacs'].prefix )
+        # else:
+        #     cfg.append( "--with-emacs=no" )
+        if spec.satisfies('+cuda'):
+            cfg.append( "--with-cuda=" + spec['cuda'].prefix )
+        else:
+            cfg.append( "--with-cuda=no" )
+        if spec.satisfies('torch'):
+            cfg.append( "--with-libtorch={0}/lib/python{1}/site-packages/torch".format(
+                spec['torch'].prefix, spec['python'].version.up_to(2)) )
+
+        else:
+            cfg.append( "--with-libtorch=no" )
 
         # The --notests flag is vestigial in more recent versions but doesn't
         # hurt to keep it in order to avoid making version dependency code here.
