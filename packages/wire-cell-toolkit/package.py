@@ -190,18 +190,13 @@ class WireCellToolkit(Package, CudaPackage):
 
         # for now, explicitly turn this off to make sure some random cuda
         # install on the host isn't picked up.
-        cfg += [
-            "--with-cuda=no"
-        ]
-
-        # if spec.satisfies('+emacs'):
-        #     cfg.append( "--with-emacs=" + spec['emacs'].prefix )
-        # else:
-        #     cfg.append( "--with-emacs=no" )
         if spec.satisfies('+cuda'):
-            cfg.append( "--with-cuda=" + spec['cuda'].prefix )
+            tdir = join_path(self.spec["cuda"].prefix, "targets",
+                             f"{self.spec.target.family}-{self.spec.architecture.platform}")
+            cfg += [ f'--with-cuda={tdir}' ]
         else:
-            cfg.append( "--with-cuda=no" )
+            cfg += [ "--with-cuda=no" ]
+
         if spec.satisfies('torch'):
             cfg.append( "--with-libtorch={0}/lib/python{1}/site-packages/torch".format(
                 spec['torch'].prefix, spec['python'].version.up_to(2)) )
