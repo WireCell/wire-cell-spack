@@ -197,9 +197,9 @@ class WireCellToolkit(Package, CudaPackage):
         else:
             cfg += [ "--with-cuda=no" ]
 
-        if spec.satisfies('torch'):
+        if spec.satisfies('+torch'):
             cfg.append( "--with-libtorch={0}/lib/python{1}/site-packages/torch".format(
-                spec['torch'].prefix, spec['python'].version.up_to(2)) )
+                spec['py-torch'].prefix, spec['python'].version.up_to(2)) )
 
         else:
             cfg.append( "--with-libtorch=no" )
