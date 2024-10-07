@@ -218,5 +218,8 @@ class WireCellToolkit(Package, CudaPackage):
         python(*ins)
 
     def setup_run_environment(self, env):
-        env.prepend_path("WIRECELL_PATH", self.prefix.share.wirecell);
+        env.prepend_path("WIRECELL_PATH", self.prefix.share.wirecell)        
+        if 'cuda' in self.spec:
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix.lib64)
+
 
