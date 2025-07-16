@@ -5,7 +5,7 @@
 
 from spack.package import *
 from spack_repo.builtin.build_systems.generic import Package
-from spack_repo.builtin.build_systems.generic import CudaPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
