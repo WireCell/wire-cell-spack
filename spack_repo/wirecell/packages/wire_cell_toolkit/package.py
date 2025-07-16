@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.generic import CudaPackage
 
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
