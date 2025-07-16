@@ -1,5 +1,6 @@
 from spack.package import *
 #from spack.pkg.builtin.boost import Boost
+from spack_repo.builtin.build_systems.generic import Package
 
 class Paal(Package):
     """
