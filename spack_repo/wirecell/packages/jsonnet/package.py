@@ -5,10 +5,11 @@
 
 
 from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
 from spack.package import *
 
 
-class Jsonnet(MakefilePackage):
+class Jsonnet(MakefilePackage, PythonExtension):
     """A data templating language for app and tool developers based on JSON"""
 
     homepage = "https://jsonnet.org/"
@@ -38,5 +39,6 @@ class Jsonnet(MakefilePackage):
     @run_after("install")
     def python_install(self):
         if "+python" in self.spec:
-            args = std_pip_args + ["--prefix=" + self.prefix, "."]
+            pip_args = PythonPipBuilder.std_args(self)
+            args = list(pip_args) + ["--prefix=" + self.prefix, "."]
             pip(*args)
