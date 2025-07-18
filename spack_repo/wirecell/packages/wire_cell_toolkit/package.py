@@ -168,6 +168,10 @@ class WireCellToolkit(Package, CudaPackage):
     # TODO: cuda, torch, zmq
 
     # ----------
+    #add version.txt needed when not doing git checkout
+    def patch(self):
+        with open("version.txt", "w") as version_file:
+            version_file.write(f"{self.version}\n")
 
     def install(self, spec, prefix):
 
