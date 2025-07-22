@@ -148,7 +148,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Suggested:
 
-    depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
+    depends_on('tbb', when='+tbb')
 
 
     # Optional:
