@@ -20,6 +20,8 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master", branch="master")
+    version("porting", branch="apply-pointcloud")
+    version("0.30.7", sha256="7e8d82203ae4b1af97897d2bc0271a7c0bc4bfa22267f2378710471bd04cfc2a")
     version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
     version("0.30.4", sha256="5971364fb1a9b4c52abaeb563c8cc8742c912d6c7c57948de0cb76acd202127b")
     version("0.30.3", sha256="cc95044a9de15cab33992084de94e07716a5c14cf2d3486b993c6ef6bad57027")
@@ -218,8 +220,11 @@ class WireCellToolkit(Package, CudaPackage):
             cfg += [ "--with-cuda=no" ]
 
         if spec.satisfies('+torch'):
-            cfg.append( "--with-libtorch={0}/lib/python{1}/site-packages/torch".format(
-                spec['py-torch'].prefix, spec['python'].version.up_to(2)) )
+            torchbase = "{0}/lib/python{1}/site-packages/torch".format(
+                spec['py-torch'].prefix, spec['python'].version.up_to(2))
+
+            cfg.append( "--with-libtorch={0}".format(torchbase) )
+            cfg.append( "--with-libtorch-include={0}/include,{0}/include/torch/csrc/api/include".format(torchbase) )
 
         else:
             cfg.append( "--with-libtorch=no" )
