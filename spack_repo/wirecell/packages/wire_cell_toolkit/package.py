@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
@@ -18,6 +20,16 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master", branch="master")
+    version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
+    version("0.30.4", sha256="5971364fb1a9b4c52abaeb563c8cc8742c912d6c7c57948de0cb76acd202127b")
+    version("0.30.3", sha256="cc95044a9de15cab33992084de94e07716a5c14cf2d3486b993c6ef6bad57027")
+    version("0.30.2", sha256="51cf692a9687e3124439ce824597c47e8dea38d7178161e3717602c330d74dc2")
+    version("0.30.1", sha256="cefef542978a1a10360e0b90532cde72a67763c2d2d3e8e1b39873ea61b36f45")
+    version("0.30.0", sha256="e5a5860145a821ce11d3040d71f7fb2bbfd3776820cd3808fd0cbaf33b401700")
+    version("0.29.5", sha256="2a16ae4b4e69bb570d79881f32ceb4868d2a9a16699419dd097765d45da06d03")
+    version("0.29.4", sha256="b2dcadc73b0945adbedf8fcaa0c81e0d0c400314514ae399a79b97e45d149415")
+    version("0.29.3", sha256="c8c9319cd5abe72db5bb9d5799b5463af3e996a551e17db10fd56281a36e7387")
+    version("0.29.2", sha256="7ca719da56d89dbe9ebcbb5755bbce99719a8cababb99aea8e24502f27c95e25")
     version("0.28.0", sha256="62f07ad8bf726ef8aaec428a84cae0ca61ca7b33d5c58f35d2c056f342fdc22c")
     version("0.27.1", sha256="a8410a9e0524570e811f5cca2ea9fc636e48c048a5e67c5cee567b935515e176")
     version("0.27.0", sha256="c4d1dc438b685bc54004425922f9435d8cb7f928a6b080b910cff021392571b2")
@@ -69,6 +81,10 @@ class WireCellToolkit(Package, CudaPackage):
             description='Add support for CUDA')
     variant('emacs', default=False,
             description='Add support for Emacs for documentation building')
+
+    # new requirements for compilers-as-nodes
+    depends_on('c', type=('build',))
+    depends_on('cxx', type=('build',))
 
     # just for build time (for waf/wcb)
     depends_on('python', type=('build',)) 
@@ -132,7 +148,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Suggested:
 
-    depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
+    depends_on('tbb', when='+tbb')
 
 
     # Optional:
@@ -152,6 +168,10 @@ class WireCellToolkit(Package, CudaPackage):
     # TODO: cuda, torch, zmq
 
     # ----------
+    #add version.txt needed when not doing git checkout
+    def patch(self):
+        with open("version.txt", "w") as version_file:
+            version_file.write(f"{self.version}\n")
 
     def install(self, spec, prefix):
 

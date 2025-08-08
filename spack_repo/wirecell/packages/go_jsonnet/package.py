@@ -20,7 +20,9 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
 
 
 class GoJsonnet(Package):
@@ -70,7 +72,8 @@ class GoJsonnet(Package):
     @run_after("install")
     def python_install(self):
         if "+python" in self.spec:
-            args = list(std_pip_args)
+            pip_args = PythonPipBuilder.std_args(self)
+            args = list(pip_args)
             args.append("--prefix=" + self.prefix)
             args.append(".")
             pip(*args)
