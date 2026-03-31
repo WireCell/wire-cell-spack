@@ -21,6 +21,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     version("master", branch="master")
     version("porting", branch="apply-pointcloud")
+    version("0.34.2", sha256="ec4fd8b9453b1ebcbcc063a9d7857f8c7368234dd7ea75fb527ad6928481060a") 
     version("0.32.1", sha256="17593baa92354357b6d16c42bfd95e7b47fb8f5c606be7eccb2099b7bab41492")
     version("0.30.7", sha256="7e8d82203ae4b1af97897d2bc0271a7c0bc4bfa22267f2378710471bd04cfc2a")
     version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
