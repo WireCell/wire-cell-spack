@@ -10,7 +10,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://wirecell.github.io/"
-    url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
+    url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.34.2.tar.gz"
     git      = "https://github.com/WireCell/wire-cell-toolkit.git"
 
     license("LGPLv3")
@@ -18,6 +18,11 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master", branch="master")
+    version("0.34.2", sha256="ec4fd8b9453b1ebcbcc063a9d7857f8c7368234dd7ea75fb527ad6928481060a")
+    version("0.33.0", sha256="8b70afeb4630a9d25ec6734e16c1d9b649357a20bdabb8b3f891a82d673fe78d")
+    version("0.32.1", sha256="17593baa92354357b6d16c42bfd95e7b47fb8f5c606be7eccb2099b7bab41492")
+    version("0.31.0", sha256="904303df763a2f6e44ffc680df6c75378616e4cdef9a961f2276db02dc1891de")
+    version("0.30.6", sha256="bdab4f72e9498f3a731ce918723b5f0bb14dd6d1de00ef67532963c2e8117b12")
     version("0.30.3", sha256="cc95044a9de15cab33992084de94e07716a5c14cf2d3486b993c6ef6bad57027")
     version("0.29.5", sha256="2a16ae4b4e69bb570d79881f32ceb4868d2a9a16699419dd097765d45da06d03")
     version("0.28.0", sha256="62f07ad8bf726ef8aaec428a84cae0ca61ca7b33d5c58f35d2c056f342fdc22c")
