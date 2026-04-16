@@ -142,7 +142,7 @@ class WireCellToolkit(Package, CudaPackage):
     # ROOT is needed for wire-cell-toolkit/root
     # Turn off opengl as it brings in an entire copy of llvm (in addition to
     # llvm internal to root) and one which breaks spack environments based on GCC builds.
-    depends_on('root @6.28.04: ~opengl cxxstd=17', when='+root')
+    depends_on('root @6.28.04: ~opengl+tmva+minuit+python+fftw+spectrum cxxstd=17', when='+root')
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
