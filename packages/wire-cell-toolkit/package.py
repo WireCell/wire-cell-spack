@@ -18,6 +18,8 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master", branch="master")
+    version("0.30.3", sha256="cc95044a9de15cab33992084de94e07716a5c14cf2d3486b993c6ef6bad57027")
+    version("0.29.5", sha256="2a16ae4b4e69bb570d79881f32ceb4868d2a9a16699419dd097765d45da06d03")
     version("0.28.0", sha256="62f07ad8bf726ef8aaec428a84cae0ca61ca7b33d5c58f35d2c056f342fdc22c")
     version("0.27.1", sha256="a8410a9e0524570e811f5cca2ea9fc636e48c048a5e67c5cee567b935515e176")
     version("0.27.0", sha256="c4d1dc438b685bc54004425922f9435d8cb7f928a6b080b910cff021392571b2")
@@ -107,7 +109,7 @@ class WireCellToolkit(Package, CudaPackage):
     # noticing that wcb.py does not test for them.  For some details
     # on this issue, see:
     # https://github.com/WireCell/wire-cell-spack/issues/4
-    boost_libs = 'date_time exception filesystem graph iostreams math program_options regex system thread'.split()
+    boost_libs = 'date_time exception filesystem graph iostreams math program_options regex serialization system thread'.split()
     boost_variants = '+'.join(boost_libs)
     depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
 
