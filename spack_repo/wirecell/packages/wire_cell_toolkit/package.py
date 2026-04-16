@@ -6,6 +6,8 @@
 from spack.package import *
 from spack_repo.builtin.build_systems.generic import Package
 from spack_repo.builtin.build_systems.cuda import CudaPackage
+import re
+import os
 
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
@@ -19,9 +21,11 @@ class WireCellToolkit(Package, CudaPackage):
 
     maintainers = ['brettviren']
 
-    version("master", branch="master")
+    version("master",  branch="master")
     version("porting", branch="apply-pointcloud")
+    version("spng",    branch="spng")
     version("0.34.2", sha256="ec4fd8b9453b1ebcbcc063a9d7857f8c7368234dd7ea75fb527ad6928481060a") 
+    version("0.33.0", sha256="8b70afeb4630a9d25ec6734e16c1d9b649357a20bdabb8b3f891a82d673fe78d")
     version("0.32.1", sha256="17593baa92354357b6d16c42bfd95e7b47fb8f5c606be7eccb2099b7bab41492")
     version("0.30.7", sha256="7e8d82203ae4b1af97897d2bc0271a7c0bc4bfa22267f2378710471bd04cfc2a")
     version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
@@ -127,7 +131,7 @@ class WireCellToolkit(Package, CudaPackage):
     # noticing that wcb.py does not test for them.  For some details
     # on this issue, see:
     # https://github.com/WireCell/wire-cell-spack/issues/4
-    boost_libs = 'date_time exception filesystem graph iostreams math program_options regex system thread'.split()
+    boost_libs = 'date_time exception filesystem graph iostreams math program_options regex serialization system thread'.split()
     boost_variants = '+'.join(boost_libs)
     depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
 
@@ -160,7 +164,7 @@ class WireCellToolkit(Package, CudaPackage):
     # ROOT is needed for wire-cell-toolkit/root
     # Turn off opengl as it brings in an entire copy of llvm (in addition to
     # llvm internal to root) and one which breaks spack environments based on GCC builds.
-    depends_on('root @6.28.04: ~opengl cxxstd=17', when='+root')
+    depends_on('root @6.28.04: ~opengl+tmva+minuit+python+fftw+spectrum  cxxstd=17', when='+root')
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
@@ -178,6 +182,20 @@ class WireCellToolkit(Package, CudaPackage):
             version_file.write(f"{self.version}\n")
 
     def install(self, spec, prefix):
+
+        # A version.txt is supposed to be made as part of the release process
+        # but apparently we often/always fail to do it so generate it here based
+        # on spack's version string when it's a release and if the source is not
+        # under git control.  
+        # https://github.com/WireCell/wire-cell-spack/issues/22
+        version_str = str(self.spec.version)
+        is_release = bool(re.fullmatch(r'[\d.]+', version_str))
+        has_git = os.path.isdir(os.path.join(self.stage.source_path, '.git'))
+
+        if is_release and not has_git:
+            with open(os.path.join(self.stage.source_path, 'version.txt'), 'w') as f:
+                f.write(version_str + '\n')
+        
 
         cfg = ["wcb", "configure", "--prefix="+prefix]
 
