@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+import re
+import os
+
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
 
@@ -161,6 +164,19 @@ class WireCellToolkit(Package, CudaPackage):
     # ----------
 
     def install(self, spec, prefix):
+
+        # A version.txt is supposed to be made as part of the release process
+        # but apparently we often/always fail to do it so generate it here based
+        # on spack's version string when it's a release and if the source is not
+        # under git control.  
+        # https://github.com/WireCell/wire-cell-spack/issues/22
+        version_str = str(self.spec.version)
+        is_release = bool(re.fullmatch(r'[\d.]+', version_str))
+        has_git = os.path.isdir(os.path.join(self.stage.source_path, '.git'))
+
+        if is_release and not has_git:
+            with open(os.path.join(self.stage.source_path, 'version.txt'), 'w') as f:
+                f.write(version_str + '\n')
 
         cfg = ["wcb", "configure", "--prefix="+prefix]
 
