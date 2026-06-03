@@ -4,6 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+import re
+import os
 
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
@@ -17,9 +21,24 @@ class WireCellToolkit(Package, CudaPackage):
 
     maintainers = ['brettviren']
 
-    version("master", branch="master")
+    version("master",  branch="master")
+    version("porting", branch="apply-pointcloud")
+    version("spng",    branch="spng")
+    version("0.36.1", sha256="a3062e7f7027cdb94fe6fde39e41627717793266a5ba3875c39139a3c05dd1f4")
+    version("0.34.2", sha256="ec4fd8b9453b1ebcbcc063a9d7857f8c7368234dd7ea75fb527ad6928481060a") 
+    version("0.33.0", sha256="8b70afeb4630a9d25ec6734e16c1d9b649357a20bdabb8b3f891a82d673fe78d")
+    version("0.32.1", sha256="17593baa92354357b6d16c42bfd95e7b47fb8f5c606be7eccb2099b7bab41492")
+    version("0.30.7", sha256="7e8d82203ae4b1af97897d2bc0271a7c0bc4bfa22267f2378710471bd04cfc2a")
+    version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
+    version("0.30.4", sha256="5971364fb1a9b4c52abaeb563c8cc8742c912d6c7c57948de0cb76acd202127b")
     version("0.30.3", sha256="cc95044a9de15cab33992084de94e07716a5c14cf2d3486b993c6ef6bad57027")
+    version("0.30.2", sha256="51cf692a9687e3124439ce824597c47e8dea38d7178161e3717602c330d74dc2")
+    version("0.30.1", sha256="cefef542978a1a10360e0b90532cde72a67763c2d2d3e8e1b39873ea61b36f45")
+    version("0.30.0", sha256="e5a5860145a821ce11d3040d71f7fb2bbfd3776820cd3808fd0cbaf33b401700")
     version("0.29.5", sha256="2a16ae4b4e69bb570d79881f32ceb4868d2a9a16699419dd097765d45da06d03")
+    version("0.29.4", sha256="b2dcadc73b0945adbedf8fcaa0c81e0d0c400314514ae399a79b97e45d149415")
+    version("0.29.3", sha256="c8c9319cd5abe72db5bb9d5799b5463af3e996a551e17db10fd56281a36e7387")
+    version("0.29.2", sha256="7ca719da56d89dbe9ebcbb5755bbce99719a8cababb99aea8e24502f27c95e25")
     version("0.28.0", sha256="62f07ad8bf726ef8aaec428a84cae0ca61ca7b33d5c58f35d2c056f342fdc22c")
     version("0.27.1", sha256="a8410a9e0524570e811f5cca2ea9fc636e48c048a5e67c5cee567b935515e176")
     version("0.27.0", sha256="c4d1dc438b685bc54004425922f9435d8cb7f928a6b080b910cff021392571b2")
@@ -71,6 +90,10 @@ class WireCellToolkit(Package, CudaPackage):
             description='Add support for CUDA')
     variant('emacs', default=False,
             description='Add support for Emacs for documentation building')
+
+    # new requirements for compilers-as-nodes
+    depends_on('c', type=('build',))
+    depends_on('cxx', type=('build',))
 
     # just for build time (for waf/wcb)
     depends_on('python', type=('build',)) 
@@ -134,7 +157,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Suggested:
 
-    depends_on('intel-tbb @2021.7.0: cxxstd=17', when='+tbb')
+    depends_on('tbb', when='+tbb')
 
 
     # Optional:
@@ -142,7 +165,7 @@ class WireCellToolkit(Package, CudaPackage):
     # ROOT is needed for wire-cell-toolkit/root
     # Turn off opengl as it brings in an entire copy of llvm (in addition to
     # llvm internal to root) and one which breaks spack environments based on GCC builds.
-    depends_on('root @6.28.04: ~opengl cxxstd=17', when='+root')
+    depends_on('root @6.28.04: ~opengl+tmva+minuit+python+fftw+spectrum  cxxstd=17', when='+root')
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
@@ -154,8 +177,26 @@ class WireCellToolkit(Package, CudaPackage):
     # TODO: cuda, torch, zmq
 
     # ----------
+    #add version.txt needed when not doing git checkout
+    def patch(self):
+        with open("version.txt", "w") as version_file:
+            version_file.write(f"{self.version}\n")
 
     def install(self, spec, prefix):
+
+        # A version.txt is supposed to be made as part of the release process
+        # but apparently we often/always fail to do it so generate it here based
+        # on spack's version string when it's a release and if the source is not
+        # under git control.  
+        # https://github.com/WireCell/wire-cell-spack/issues/22
+        version_str = str(self.spec.version)
+        is_release = bool(re.fullmatch(r'[\d.]+', version_str))
+        has_git = os.path.isdir(os.path.join(self.stage.source_path, '.git'))
+
+        if is_release and not has_git:
+            with open(os.path.join(self.stage.source_path, 'version.txt'), 'w') as f:
+                f.write(version_str + '\n')
+        
 
         cfg = ["wcb", "configure", "--prefix="+prefix]
 
@@ -200,8 +241,11 @@ class WireCellToolkit(Package, CudaPackage):
             cfg += [ "--with-cuda=no" ]
 
         if spec.satisfies('+torch'):
-            cfg.append( "--with-libtorch={0}/lib/python{1}/site-packages/torch".format(
-                spec['py-torch'].prefix, spec['python'].version.up_to(2)) )
+            torchbase = "{0}/lib/python{1}/site-packages/torch".format(
+                spec['py-torch'].prefix, spec['python'].version.up_to(2))
+
+            cfg.append( "--with-libtorch={0}".format(torchbase) )
+            cfg.append( "--with-libtorch-include={0}/include,{0}/include/torch/csrc/api/include".format(torchbase) )
 
         else:
             cfg.append( "--with-libtorch=no" )
