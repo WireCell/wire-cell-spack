@@ -138,7 +138,7 @@ class WireCellToolkit(Package, CudaPackage):
 
     # We need one or the other.
     depends_on('jsonnet @0.19.1: +python', when='+cppjsonnet')
-    depends_on('go-jsonnet @0.19.1: +python', when='~cppjsonnet')
+    depends_on('go-jsonnet @0.19.1: +python +shared', when='~cppjsonnet')
 
     # used to build documentation.
     depends_on('emacs', when='+emacs')
