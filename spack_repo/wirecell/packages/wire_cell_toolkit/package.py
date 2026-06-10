@@ -146,6 +146,12 @@ class WireCellToolkit(Package, CudaPackage):
     boost_variants = '+'.join(boost_libs)
     depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
 
+    # Boost 1.89.0 removed the Boost.System config test header that WCT's
+    # build still probes for.  Releases 0.36.1 and older need this patch to
+    # build against such a Boost.  Newer WCT releases handle it natively.
+    patch("remove-boost-system-config-test.patch",
+          when="@:0.36.1 ^boost@1.89.0:")
+
     # We need one or the other.
     depends_on('jsonnet @0.19.1: +python', when='+cppjsonnet')
     depends_on('go-jsonnet @0.19.1: +python +shared', when='~cppjsonnet')
