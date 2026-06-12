@@ -24,9 +24,18 @@ class WireCellToolkit(Package, CudaPackage):
     version("master",  branch="master")
     version("porting", branch="apply-pointcloud")
     version("spng",    branch="spng")
+
+    version("0.36.1", sha256="a3062e7f7027cdb94fe6fde39e41627717793266a5ba3875c39139a3c05dd1f4")
+
+    version("0.35.0", sha256="3fc7c3eab905222a4aaaa9d6c927e668fd87477e2efac3a1ef04f43a0119ee98")
+
+    version("0.34.3", sha256="32ddc7ba1dd2ee0ad8f91fe5bdfee517d9a56f1ae8ad04c190390e6c028c601b")
     version("0.34.2", sha256="ec4fd8b9453b1ebcbcc063a9d7857f8c7368234dd7ea75fb527ad6928481060a") 
+
     version("0.33.0", sha256="8b70afeb4630a9d25ec6734e16c1d9b649357a20bdabb8b3f891a82d673fe78d")
+
     version("0.32.1", sha256="17593baa92354357b6d16c42bfd95e7b47fb8f5c606be7eccb2099b7bab41492")
+
     version("0.30.7", sha256="7e8d82203ae4b1af97897d2bc0271a7c0bc4bfa22267f2378710471bd04cfc2a")
     version("0.30.5", sha256="f665adf8e75af2ea26176acdae56816db6c1af2ecc86c405c49ab43c6a25e0b2")
     version("0.30.4", sha256="5971364fb1a9b4c52abaeb563c8cc8742c912d6c7c57948de0cb76acd202127b")
@@ -34,6 +43,8 @@ class WireCellToolkit(Package, CudaPackage):
     version("0.30.2", sha256="51cf692a9687e3124439ce824597c47e8dea38d7178161e3717602c330d74dc2")
     version("0.30.1", sha256="cefef542978a1a10360e0b90532cde72a67763c2d2d3e8e1b39873ea61b36f45")
     version("0.30.0", sha256="e5a5860145a821ce11d3040d71f7fb2bbfd3776820cd3808fd0cbaf33b401700")
+
+    version("0.29.6", sha256="3929940ec46ffeb4d4c99466e5b7ee488199d2f60d5b0d5322febd61b8286924")
     version("0.29.5", sha256="2a16ae4b4e69bb570d79881f32ceb4868d2a9a16699419dd097765d45da06d03")
     version("0.29.4", sha256="b2dcadc73b0945adbedf8fcaa0c81e0d0c400314514ae399a79b97e45d149415")
     version("0.29.3", sha256="c8c9319cd5abe72db5bb9d5799b5463af3e996a551e17db10fd56281a36e7387")
@@ -104,10 +115,10 @@ class WireCellToolkit(Package, CudaPackage):
 
     depends_on('eigen @3.4.0:')
 
-    depends_on('spdlog @1.9.2:')
+    depends_on('spdlog @1.9.2:') # fmt v9+ is used by spdlog v1.11.0+, more below.
 
     # Spack builds spdlog against an "external" fmtlib and does not build
-    # against spdlog's bundled fmtlib.  Thie means the version of fmtlib is
+    # against spdlog's bundled fmtlib.  This means the version of fmtlib is
     # exposed to the application and spack will tend to use the most recent
     # available.  fmtlib made an API change at v9 that breaks the ability for it
     # to implicitly use ostream insertion operator<<'s.  The new API requires
@@ -135,12 +146,22 @@ class WireCellToolkit(Package, CudaPackage):
     boost_variants = '+'.join(boost_libs)
     depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
 
+    # Boost 1.89.0 removed the Boost.System config test header that WCT's
+    # build still probes for.  Releases 0.36.1 and older need this patch to
+    # build against such a Boost.  Newer WCT releases handle it natively.
+    patch("remove-boost-system-config-test.patch",
+          when="@:0.36.1 ^boost@1.89.0:")
+
     # We need one or the other.
     depends_on('jsonnet @0.19.1: +python', when='+cppjsonnet')
-    depends_on('go-jsonnet @0.19.1: +python', when='~cppjsonnet')
+    depends_on('go-jsonnet @0.19.1: +python +shared', when='~cppjsonnet')
 
     # used to build documentation.
     depends_on('emacs', when='+emacs')
+
+    # future me: torch bundles its own fmt which can lead to subtle compile/link
+    # order problems seen in SPNG at least when it is a different version that
+    # the external fmt.  We may need to face this when we merge SPNG.
 
     depends_on('py-torch~cuda', when='+torch ~cuda')
     # Apparently must exhaustively forward all compute capability versions.
@@ -156,7 +177,9 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Suggested:
 
-    depends_on('tbb', when='+tbb')
+    # The packaging is named intel-tbb, it "provides" tbb.
+    # Not sure what sets this minimum version but WCT's README has it listed as such.
+    depends_on('tbb @2021.1.1:', when='+tbb')
 
 
     # Optional:
@@ -168,7 +191,9 @@ class WireCellToolkit(Package, CudaPackage):
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
-    depends_on('h5cpp ~mpi', when='+hdf') # this will go away sometime soon.
+    # Went to depending on only the hdf5 library at 0.29.1
+    # git tag --contains 7ce7b362b8cd1b79be3bf6a68620534e2764e764
+    depends_on('h5cpp ~mpi', when='@:0.29.0 +hdf')
 
     # glpk is needed for wire-cell-toolkit/patrec
     depends_on('glpk', when='+glpk')  
