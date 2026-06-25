@@ -22,8 +22,12 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master",  branch="master")
+
+    # major developer branches
     version("porting", branch="apply-pointcloud")
     version("spng",    branch="spng")
+
+    version("0.37.0", sha256="3951eaaeac284b993931329410c987d05bc9942defc8a9b3f24d5b0d66b32fe6") 
 
     version("0.36.1", sha256="a3062e7f7027cdb94fe6fde39e41627717793266a5ba3875c39139a3c05dd1f4")
 
@@ -144,7 +148,15 @@ class WireCellToolkit(Package, CudaPackage):
     # https://github.com/WireCell/wire-cell-spack/issues/4
     boost_libs = 'date_time exception filesystem graph iostreams math program_options regex serialization system thread'.split()
     boost_variants = '+'.join(boost_libs)
-    depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
+
+    # Forward WCT's cxxstd to the C++ dependencies that expose it (the usual loop).
+    # ROOT is intentionally left UNPINNED on opengl: it pulls a second llvm, but
+    # edepsim needs root +opengl for Eve, so that choice is left to edepsim / the
+    # consuming environment rather than asserted (either way) by WCT.
+    for std in ("17", "20", "23"):
+        depends_on(f"boost @1.80.0: cxxstd={std} +{boost_variants}", when=f"cxxstd={std}")
+        depends_on(f"root @6.28.04: +tmva+minuit+python+fftw+spectrum cxxstd={std}",
+                   when=f"cxxstd={std} +root")
 
     # Boost 1.89.0 removed the Boost.System config test header that WCT's
     # build still probes for.  Releases 0.36.1 and older need this patch to
@@ -184,10 +196,8 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Optional:
 
-    # ROOT is needed for wire-cell-toolkit/root
-    # Turn off opengl as it brings in an entire copy of llvm (in addition to
-    # llvm internal to root) and one which breaks spack environments based on GCC builds.
-    depends_on('root @6.28.04: ~opengl+tmva+minuit+python+fftw+spectrum  cxxstd=17', when='+root')
+    # ROOT (for wire-cell-toolkit/root) is declared in the cxxstd loop above so its
+    # C++ standard tracks WCT's; see the note there about opengl.
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
