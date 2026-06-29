@@ -20,6 +20,8 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+import os
+
 from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
 from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
@@ -44,6 +46,13 @@ class GoJsonnet(Package):
             description="Build the libgojsonnet C-shared library")
     variant("python", default=False,
             description="Provide Python bindings for go-jsonnet")
+
+    # When built +shared, go-jsonnet also installs the reference cpp-jsonnet
+    # C++ wrapper (libjsonnet++) linked against the Go engine, plus a
+    # libjsonnet.so alias. It is then a drop-in replacement for the C/C++
+    # `jsonnet` package's library layout and can satisfy the `libjsonnet`
+    # virtual that Jsonnet-consuming packages (e.g. phlex, phlexed) depend on.
+    provides("libjsonnet", when="+shared")
 
     # The command-line programs are pure Go; go and git suffice for them.
     depends_on('go', type='build')
@@ -91,6 +100,28 @@ class GoJsonnet(Package):
             install("libgojsonnet.so", prefix.lib)
             install("libgojsonnet.h", prefix.include)
             install("cpp-jsonnet/include/libjsonnet.h", prefix.include)
+
+            # Build the reference C++ wrapper (libjsonnet++) against the Go
+            # engine. libjsonnet++.cpp only calls the C ABI that libgojsonnet
+            # exports, so it links straight against it. Consumers that use the
+            # cpp-jsonnet C++ API (e.g. Phlex's `jsonnet::Jsonnet`) then run on
+            # go-jsonnet with no source change -- it is a drop-in libjsonnet++.
+            cxx = Executable(env["CXX"])
+            cxx("-std=c++17", "-fPIC", "-shared",
+                "-Wl,-soname,libjsonnet++.so",
+                "-Icpp-jsonnet/include",
+                "cpp-jsonnet/cpp/libjsonnet++.cpp",
+                "-L" + prefix.lib, "-Wl,-rpath," + prefix.lib, "-lgojsonnet",
+                "-o", "libjsonnet++.so")
+            install("libjsonnet++.so", prefix.lib)
+            install("cpp-jsonnet/include/libjsonnet++.h", prefix.include)
+
+            # Drop-in name compatibility: expose the Go engine under the C
+            # library's canonical name, so `find_library(NAMES jsonnet)` and any
+            # libjsonnet.so consumer resolve to go-jsonnet.
+            with working_dir(prefix.lib):
+                if not os.path.exists("libjsonnet.so"):
+                    os.symlink("libgojsonnet.so", "libjsonnet.so")
 
 
     @run_after("install")
