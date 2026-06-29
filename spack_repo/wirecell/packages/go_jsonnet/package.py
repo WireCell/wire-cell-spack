@@ -101,19 +101,66 @@ class GoJsonnet(Package):
             install("libgojsonnet.h", prefix.include)
             install("cpp-jsonnet/include/libjsonnet.h", prefix.include)
 
-            # Build the reference C++ wrapper (libjsonnet++) against the Go
-            # engine. libjsonnet++.cpp only calls the C ABI that libgojsonnet
-            # exports, so it links straight against it. Consumers that use the
-            # cpp-jsonnet C++ API (e.g. Phlex's `jsonnet::Jsonnet`) then run on
-            # go-jsonnet with no source change -- it is a drop-in libjsonnet++.
+            # Build the reference cpp-jsonnet C++ wrapper (libjsonnet++) against
+            # the Go engine, so consumers of the cpp-jsonnet C++ API (e.g.
+            # Phlex's `jsonnet::Jsonnet`) run on go-jsonnet with no source change
+            # -- a drop-in libjsonnet++.
             cxx = Executable(env["CXX"])
-            cxx("-std=c++17", "-fPIC", "-shared",
-                "-Wl,-soname,libjsonnet++.so",
-                "-Icpp-jsonnet/include",
-                "cpp-jsonnet/cpp/libjsonnet++.cpp",
+            cc = Executable(env["CC"])
+            nm = Executable("nm")
+
+            # The wrapper calls the C ABI declared in libjsonnet.h. go-jsonnet's
+            # C bindings implement most -- but not all -- of it (e.g.
+            # jsonnet_set_trailing_newline, a manifest-output formatting toggle,
+            # is absent). Compile the wrapper to an object, then satisfy any
+            # C-API symbol the engine lacks with a no-op shim so libjsonnet++.so
+            # is self-contained and links cleanly even under
+            # --no-allow-shlib-undefined. Such functions are output-formatting
+            # setters unused when embedding Jsonnet as a library, so a no-op is
+            # inconsequential; evaluation itself is unaffected.
+            # Build intermediates in a "_"-prefixed dir: the Go toolchain
+            # ignores such directories, so the later +python `go build` (run in
+            # the source root) never sees these stray C/object files.
+            wdir = "_wrapper"
+            mkdirp(wdir)
+            wobj = join_path(wdir, "libjsonnet++.o")
+            cxx("-std=c++17", "-fPIC", "-Icpp-jsonnet/include",
+                "-c", "cpp-jsonnet/cpp/libjsonnet++.cpp", "-o", wobj)
+
+            exported = set()
+            for line in nm("-D", "--defined-only",
+                           join_path(prefix.lib, "libgojsonnet.so"),
+                           output=str).splitlines():
+                tok = line.split()
+                if tok:
+                    exported.add(tok[-1])
+            missing = sorted({
+                tok[-1]
+                for tok in (l.split() for l in nm("-u", wobj, output=str).splitlines())
+                if tok and tok[-1].startswith("jsonnet_") and tok[-1] not in exported
+            })
+
+            objs = [wobj]
+            if missing:
+                tty.warn("go-jsonnet: stubbing C-API symbols absent from "
+                         "libgojsonnet: " + ", ".join(missing))
+                compat_c = join_path(wdir, "gojsonnet_compat.c")
+                with open(compat_c, "w") as fh:
+                    fh.write("/* No-op shims for libjsonnet.h functions that "
+                             "go-jsonnet's C bindings do not implement.\n"
+                             "   These are output-formatting setters, unused "
+                             "when embedding Jsonnet as a library. */\n")
+                    for sym in missing:
+                        fh.write("void %s(void) {}\n" % sym)
+                compat_o = join_path(wdir, "gojsonnet_compat.o")
+                cc("-fPIC", "-c", compat_c, "-o", compat_o)
+                objs.append(compat_o)
+
+            wlib = join_path(wdir, "libjsonnet++.so")
+            cxx("-shared", "-Wl,-soname,libjsonnet++.so", *objs,
                 "-L" + prefix.lib, "-Wl,-rpath," + prefix.lib, "-lgojsonnet",
-                "-o", "libjsonnet++.so")
-            install("libjsonnet++.so", prefix.lib)
+                "-o", wlib)
+            install(wlib, prefix.lib)
             install("cpp-jsonnet/include/libjsonnet++.h", prefix.include)
 
             # Drop-in name compatibility: expose the Go engine under the C
