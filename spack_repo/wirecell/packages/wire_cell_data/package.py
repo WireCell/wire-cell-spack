@@ -12,15 +12,17 @@ class WireCellData(Package):
 
     homepage = "https://wirecell.bnl.gov"
     url = "https://github.com/WireCell/wire-cell-data/archive/refs/tags/0.1.0.tar.gz"
+    git = "https://github.com/WireCell/wire-cell-data.git"
 
     license("LGPLv3", checked_by="brettviren")
     maintainers("brettviren")
 
+    version("0.2.0", sha256="85c188cc3870358af1a349fe572b1485f9f65de197d9308783a1d2fe87960466")
     version("0.1.0", sha256="cab5d4f4cb39c15bebea361fd0b933e964846207fbac85bb59ea6fdac561fdce")
 
     def install(self, spec, prefix):
-        mkdirp(self.prefix.share.wirecell)
-        install("*", prefix.share.wirecell)
+        install_tree(".", prefix.share.wirecell)
+
         
 
     def setup_run_environment(self, env):
