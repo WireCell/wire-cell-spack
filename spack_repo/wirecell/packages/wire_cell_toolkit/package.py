@@ -12,7 +12,6 @@ import os
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://wirecell.github.io/"
     url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
     git      = "https://github.com/WireCell/wire-cell-toolkit.git"
@@ -266,6 +265,13 @@ class WireCellToolkit(Package, CudaPackage):
 
         if 'tbb' in spec:
             cfg += ['--with-tbb=' + spec['tbb'].prefix ]
+
+        if 'root' in spec:
+            cfg += ['--with-root=' + spec['root'].prefix ]
+
+        if 'triton' in spec:
+            cfg += ['--with-triton=' + spec['triton'].prefix ]
+            cfg += ['--with-grpc=' + spec['grpc'].prefix ]
 
         # one or the other assured by +/~cppjsonnet?
         if 'jsonnet' in spec:
