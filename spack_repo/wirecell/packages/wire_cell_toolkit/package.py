@@ -102,6 +102,8 @@ class WireCellToolkit(Package, CudaPackage):
             description='Add support for libtorch')
     variant('cuda', default=False,
             description='Add support for CUDA')
+    variant('python', default=False,
+            description='Build the pyutil (WCPPyUtil) package, which embeds libpython')
     variant('emacs', default=False,
             description='Add support for Emacs for documentation building')
 
@@ -110,8 +112,12 @@ class WireCellToolkit(Package, CudaPackage):
     depends_on('cxx', type=('build',))
 
     # just for build time (for waf/wcb)
-    depends_on('python', type=('build',)) 
-    depends_on('pkgconfig', type=('build',)) 
+    depends_on('python', type=('build',))
+    depends_on('pkgconfig', type=('build',))
+
+    # +python builds WCPPyUtil, which embeds libpython -- so python is then also
+    # a link/run dependency (headers + libpython), not just a build tool.
+    depends_on('python', when='+python')
 
     # Required
 
@@ -175,7 +181,17 @@ class WireCellToolkit(Package, CudaPackage):
     # order problems seen in SPNG at least when it is a different version that
     # the external fmt.  We may need to face this when we merge SPNG.
 
-    depends_on('py-torch~cuda', when='+torch ~cuda')
+    # +torch links libtorch. When WCT itself is ~cuda we intentionally do NOT
+    # pin py-torch's cuda variant: libtorch dispatches CUDA at runtime, so a
+    # CUDA-enabled libtorch links fine into a non-CUDA WCT build.  This lets an
+    # environment provide `py-torch+cuda` (built with a CUDA-compatible host
+    # compiler, e.g. gcc@12) while WCT stays on gcc@15/C++23 without itself
+    # becoming an nvcc-compiled CudaPackage -- which CUDA 12.x forbids under
+    # gcc@15 (CudaPackage: conflicts %gcc@15: when %cuda@:12.9).
+    depends_on('py-torch', when='+torch')
+    # When WCT is built +cuda it DOES compile its own device code, so it must
+    # match py-torch's cuda flavor and forward the compute capability.  This
+    # path requires a CUDA-compatible host compiler for WCT itself.
     # Apparently must exhaustively forward all compute capability versions.
     # This follows how the ams package does things.
     with when("+cuda"):
@@ -283,6 +299,24 @@ class WireCellToolkit(Package, CudaPackage):
 
         else:
             cfg.append( "--with-libtorch=no" )
+
+        # +python builds the WCPPyUtil package (pyutil/), which embeds libpython.
+        # Pass explicit paths rather than relying on wcb's default probe (which
+        # hardwires the 'python3.11' lib name and a pkg-config lookup): give the
+        # version-correct include subdir (include/pythonX.Y) and lib name so wcb
+        # finds this spack python, sets INCLUDES_PYTHON, and keeps pyutil.
+        # ~python passes --with-python=no so INCLUDES_PYTHON stays unset and wcb
+        # drops pyutil (and clus builds without WCPPyUtil).
+        if spec.satisfies('+python'):
+            pyver = spec['python'].version.up_to(2)
+            cfg += [
+                "--with-python={0}".format(spec['python'].prefix),
+                "--with-python-include={0}/python{1}".format(spec['python'].prefix.include, pyver),
+                "--with-python-lib={0}".format(spec['python'].prefix.lib),
+                "--with-python-libs=python{0}".format(pyver),
+            ]
+        else:
+            cfg += ["--with-python=no"]
 
         # The --notests flag is vestigial in more recent versions but doesn't
         # hurt to keep it in order to avoid making version dependency code here.
