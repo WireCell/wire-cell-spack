@@ -20,6 +20,7 @@ class WireCellPrototype(Package):
 
     version("master", branch="master", submodules=True)
     # version("", sha256="", submodules=True)
+    version("00.18.01", tag="v00_18_01", commit="6ec2dd49c4cc0f297a7c34f827175827a040ca4d", submodules=True)
     version("v00_17_01", tag="v00_17_01", commit="06dea6ed0ab0eed7aa96d26cf3b55dbc3b09b6cd", submodules=True)
     version("v00_14_11", tag="v00_14_11", commit="0543a6e69ac5d02dbd084b6fa2af76bc3e5a788c", submodules=True)
     version("v00_14_08", tag="v00_14_08", commit="d6338d077b4e0004a4c1c74acb5b7af3015c8f35", submodules=True)
@@ -38,7 +39,9 @@ class WireCellPrototype(Package):
 
     # just for build time (for waf/wcb)
     depends_on('python', type=('build',)) 
-    depends_on('pkgconfig', type=('build',)) 
+    depends_on('pkgconfig', type=('build',))
+    depends_on('c', type=('build',))
+    depends_on('cxx', type=('build',))
 
     # Required
     depends_on('eigen @3.4.0:')
