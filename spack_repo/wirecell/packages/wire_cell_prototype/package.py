@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
 
@@ -90,3 +91,7 @@ class WireCellPrototype(Package):
         python(*cfg)
         python(*bld)
         python(*ins)
+
+    def setup_run_environment(self, env):
+        print("Setting up wire cell prototype run environment.", file=sys.stderr)
+        env.set("WCP_DIR", self.prefix)
