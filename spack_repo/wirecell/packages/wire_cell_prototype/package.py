@@ -50,7 +50,9 @@ class WireCellPrototype(Package):
 
     depends_on('boost @1.80.0: +system+filesystem+graph')
     # fixme: need to propagate cxxstd better
-    depends_on('root @6.28.04: +tmva+minuit+python+fftw+spectrum cxxstd=17')
+    depends_on('root @6.28: +tmva+minuit+python+fftw+spectrum cxxstd=17', when="cxxstd=17")
+    depends_on('root @6.30: +tmva+minuit+python+fftw+spectrum cxxstd=20', when="cxxstd=20")
+    depends_on('root @6.36: +tmva+minuit+python+fftw+spectrum cxxstd=23', when="cxxstd=23")
     depends_on('glpk')  
 
     def patch(self):
