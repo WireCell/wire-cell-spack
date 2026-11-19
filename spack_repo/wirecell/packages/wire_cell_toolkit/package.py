@@ -12,7 +12,6 @@ import os
 class WireCellToolkit(Package, CudaPackage):
     """Toolkit for Liquid Argon TPC Reconstruction and Visualization ."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://wirecell.github.io/"
     url      = "https://github.com/WireCell/wire-cell-toolkit/archive/refs/tags/0.23.0.tar.gz"
     git      = "https://github.com/WireCell/wire-cell-toolkit.git"
@@ -22,8 +21,13 @@ class WireCellToolkit(Package, CudaPackage):
     maintainers = ['brettviren']
 
     version("master",  branch="master")
+
+    # major developer branches
     version("porting", branch="apply-pointcloud")
     version("spng",    branch="spng")
+
+    version("0.37.1", sha256="8b43aa354637670372e8e22bb3270ec2667fbf3ec2ac0f2a73a8f3a2d6e42f3e")
+    version("0.37.0", sha256="3951eaaeac284b993931329410c987d05bc9942defc8a9b3f24d5b0d66b32fe6") 
 
     version("0.36.1", sha256="a3062e7f7027cdb94fe6fde39e41627717793266a5ba3875c39139a3c05dd1f4")
 
@@ -98,6 +102,8 @@ class WireCellToolkit(Package, CudaPackage):
             description='Add support for libtorch')
     variant('cuda', default=False,
             description='Add support for CUDA')
+    variant('python', default=False,
+            description='Build the pyutil (WCPPyUtil) package, which embeds libpython')
     variant('emacs', default=False,
             description='Add support for Emacs for documentation building')
 
@@ -106,8 +112,12 @@ class WireCellToolkit(Package, CudaPackage):
     depends_on('cxx', type=('build',))
 
     # just for build time (for waf/wcb)
-    depends_on('python', type=('build',)) 
-    depends_on('pkgconfig', type=('build',)) 
+    depends_on('python', type=('build',))
+    depends_on('pkgconfig', type=('build',))
+
+    # +python builds WCPPyUtil, which embeds libpython -- so python is then also
+    # a link/run dependency (headers + libpython), not just a build tool.
+    depends_on('python', when='+python')
 
     # Required
 
@@ -144,7 +154,15 @@ class WireCellToolkit(Package, CudaPackage):
     # https://github.com/WireCell/wire-cell-spack/issues/4
     boost_libs = 'date_time exception filesystem graph iostreams math program_options regex serialization system thread'.split()
     boost_variants = '+'.join(boost_libs)
-    depends_on('boost @1.80.0: cxxstd=17 +'+boost_variants)
+
+    # Forward WCT's cxxstd to the C++ dependencies that expose it (the usual loop).
+    # ROOT is intentionally left UNPINNED on opengl: it pulls a second llvm, but
+    # edepsim needs root +opengl for Eve, so that choice is left to edepsim / the
+    # consuming environment rather than asserted (either way) by WCT.
+    for std in ("17", "20", "23"):
+        depends_on(f"boost @1.80.0: cxxstd={std} +{boost_variants}", when=f"cxxstd={std}")
+        depends_on(f"root @6.28.04: +tmva+minuit+python+fftw+spectrum cxxstd={std}",
+                   when=f"cxxstd={std} +root")
 
     # Boost 1.89.0 removed the Boost.System config test header that WCT's
     # build still probes for.  Releases 0.36.1 and older need this patch to
@@ -163,7 +181,17 @@ class WireCellToolkit(Package, CudaPackage):
     # order problems seen in SPNG at least when it is a different version that
     # the external fmt.  We may need to face this when we merge SPNG.
 
-    depends_on('py-torch~cuda', when='+torch ~cuda')
+    # +torch links libtorch. When WCT itself is ~cuda we intentionally do NOT
+    # pin py-torch's cuda variant: libtorch dispatches CUDA at runtime, so a
+    # CUDA-enabled libtorch links fine into a non-CUDA WCT build.  This lets an
+    # environment provide `py-torch+cuda` (built with a CUDA-compatible host
+    # compiler, e.g. gcc@12) while WCT stays on gcc@15/C++23 without itself
+    # becoming an nvcc-compiled CudaPackage -- which CUDA 12.x forbids under
+    # gcc@15 (CudaPackage: conflicts %gcc@15: when %cuda@:12.9).
+    depends_on('py-torch', when='+torch')
+    # When WCT is built +cuda it DOES compile its own device code, so it must
+    # match py-torch's cuda flavor and forward the compute capability.  This
+    # path requires a CUDA-compatible host compiler for WCT itself.
     # Apparently must exhaustively forward all compute capability versions.
     # This follows how the ams package does things.
     with when("+cuda"):
@@ -184,10 +212,8 @@ class WireCellToolkit(Package, CudaPackage):
 
     # Optional:
 
-    # ROOT is needed for wire-cell-toolkit/root
-    # Turn off opengl as it brings in an entire copy of llvm (in addition to
-    # llvm internal to root) and one which breaks spack environments based on GCC builds.
-    depends_on('root @6.28.04: ~opengl+tmva+minuit+python+fftw+spectrum  cxxstd=17', when='+root')
+    # ROOT (for wire-cell-toolkit/root) is declared in the cxxstd loop above so its
+    # C++ standard tracks WCT's; see the note there about opengl.
 
     depends_on('hdf5 ~mpi+threadsafe', when='+hdf')
 
@@ -241,6 +267,13 @@ class WireCellToolkit(Package, CudaPackage):
         if 'tbb' in spec:
             cfg += ['--with-tbb=' + spec['tbb'].prefix ]
 
+        if 'root' in spec:
+            cfg += ['--with-root=' + spec['root'].prefix ]
+
+        if 'triton' in spec:
+            cfg += ['--with-triton=' + spec['triton'].prefix ]
+            cfg += ['--with-grpc=' + spec['grpc'].prefix ]
+
         # one or the other assured by +/~cppjsonnet?
         if 'jsonnet' in spec:
             jsonnet = 'jsonnet'
@@ -273,6 +306,24 @@ class WireCellToolkit(Package, CudaPackage):
 
         else:
             cfg.append( "--with-libtorch=no" )
+
+        # +python builds the WCPPyUtil package (pyutil/), which embeds libpython.
+        # Pass explicit paths rather than relying on wcb's default probe (which
+        # hardwires the 'python3.11' lib name and a pkg-config lookup): give the
+        # version-correct include subdir (include/pythonX.Y) and lib name so wcb
+        # finds this spack python, sets INCLUDES_PYTHON, and keeps pyutil.
+        # ~python passes --with-python=no so INCLUDES_PYTHON stays unset and wcb
+        # drops pyutil (and clus builds without WCPPyUtil).
+        if spec.satisfies('+python'):
+            pyver = spec['python'].version.up_to(2)
+            cfg += [
+                "--with-python={0}".format(spec['python'].prefix),
+                "--with-python-include={0}/python{1}".format(spec['python'].prefix.include, pyver),
+                "--with-python-lib={0}".format(spec['python'].prefix.lib),
+                "--with-python-libs=python{0}".format(pyver),
+            ]
+        else:
+            cfg += ["--with-python=no"]
 
         # The --notests flag is vestigial in more recent versions but doesn't
         # hurt to keep it in order to avoid making version dependency code here.
