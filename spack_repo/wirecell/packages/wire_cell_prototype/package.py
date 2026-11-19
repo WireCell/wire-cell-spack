@@ -53,6 +53,23 @@ class WireCellPrototype(Package):
     depends_on('root @6.28.04: +tmva+minuit+python+fftw+spectrum cxxstd=17')
     depends_on('glpk')  
 
+    def patch(self):
+        namespace_files = ["nav/src/DetGenerativeFDS.cxx",
+                           "nav/src/GenerativeFDS.cxx",
+                           "signal/src/DetGenerativeFDS.cxx"]
+        for f in namespace_files:
+            filter_file("using namespace std;",
+                        "",
+                        f)
+            filter_file("typedef map",
+                        "typedef std::map",
+                        f)
+
+        filter_file("#include <limits>",
+                    "#include <limits>\n#include <cstdint>",
+                    "quickhull/inc/WCPQuickhull/QuickHull.h")
+
+
     def install(self, spec, prefix):
 
         cfg = ["waf-tools/waf", "configure", "--prefix="+prefix]
